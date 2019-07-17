@@ -8,7 +8,7 @@ YAML.load(process.cwd() + '/tasks.conf', function(config) {
     app.set('port', service_port)
     server = http.createServer(app)
     server.listen(service_port, function() {
-      console.log(`[${new Date().toISOString()}] SUCCESS App listening on port  ${service_port}`)
+      console.log(`[${new Date().toISOString()}] SUCCESS App listening on port ${service_port}`)
     })
   }
 })
