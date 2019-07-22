@@ -111,7 +111,7 @@ module.exports = {
           })
         )
       })
-      .sort({ date: -1, state: -1, level: -1 })
+      .sort({ level: -1, date: -1, state: -1 })
   },
   findTaskByTaskId: (req, res) => {
     const { task_id } = req.params
