@@ -144,21 +144,18 @@ module.exports = {
   },
   editTask: (req, res) => {
     const edit_time = new Date().toISOString()
-    const task_id = global.ObjectId(req.body.task_id)
-    taskModel.updateOne(
-      { _id: task_id },
-      { ...req.body, edit_time },
-      (err, doc) => {
-        if (err) {
-          assert.equal(null, err)
-        }
-        res.json(
-          ApiResponse({
-            state: true,
-            message: '操作成功'
-          })
-        )
+    const { state, _id } = req.body
+    const task_id = global.ObjectId(_id)
+    taskModel.updateOne({ _id: task_id }, { state, edit_time }, (err, doc) => {
+      if (err) {
+        assert.equal(null, err)
       }
-    )
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '操作成功'
+        })
+      )
+    })
   }
 }
