@@ -3,17 +3,51 @@ const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 
 module.exports = {
+  // login: (req, res) => {
+  //   userModel.findOne({ ...req.body }, (err, doc) => {
+  //     if (err) {
+  //       assert.equal(null, err)
+  //     }
+  //     if (doc) {
+  //       if (doc.password === req.body.password) {
+  //         res.json(
+  //           ApiResponse({
+  //             state: true,
+  //             data: doc,
+  //             message: '登录成功'
+  //           })
+  //         )
+  //       } else {
+  //         res.json(
+  //           ApiResponse({
+  //             state: false,
+  //             message: '密码不正确'
+  //           })
+  //         )
+  //       }
+  //     } else {
+  //       res.json(
+  //         ApiResponse({
+  //           state: false,
+  //           message: '用户不存在'
+  //         })
+  //       )
+  //     }
+  //   })
+  // },
   login: (req, res) => {
-    userModel.findOne({ ...req.body }, (err, doc) => {
+    const { name, password } = req.body
+    userModel.find({ name }, (err, docs) => {
       if (err) {
         assert.equal(null, err)
       }
-      if (doc) {
-        if (doc.password === req.body.password) {
+      if (docs) {
+        let index = docs.findIndex(v => v.password === password)
+        if (index !== -1) {
           res.json(
             ApiResponse({
               state: true,
-              data: doc,
+              data: docs[index],
               message: '登录成功'
             })
           )
