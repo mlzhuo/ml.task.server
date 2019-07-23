@@ -108,12 +108,10 @@ module.exports = {
   },
   editTask: async (req, res) => {
     const edit_time = new Date().toISOString()
-    const { state, _id } = req.body
-    const task_id = global.ObjectId(_id)
-    const result = await taskModel.updateOne(
-      { _id: task_id },
-      { state, edit_time }
-    )
+    const { state, task_id, content, level } = req.body
+    const _id = global.ObjectId(task_id)
+    const doc = state ? { state, edit_time } : { edit_time, content, level }
+    const result = await taskModel.updateOne({ _id }, doc)
     result &&
       res.json(
         ApiResponse({
