@@ -50,87 +50,76 @@ module.exports = {
     const result = await eventModel
       .find({ user_id })
       .sort({ level: -1, date: -1 })
-    res.json(
-      ApiResponse({
-        state: result && true,
-        data: result
-      })
-    )
-  },
-  addEvents: (req, res) => {
-    const date = new Date().toISOString()
-    eventModel.create({ ...req.body, date }, (err, doc) => {
-      if (err) {
-        assert.equal(null, err)
-      }
+    result &&
       res.json(
         ApiResponse({
           state: true,
-          data: doc,
+          data: result
+        })
+      )
+  },
+  addEvents: async (req, res) => {
+    const date = new Date().toISOString()
+    const result = await eventModel.create({ ...req.body, date })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result,
           message: '添加成功'
         })
       )
-    })
   },
-  findTasksByEventId: (req, res) => {
+  findTasksByEventId: async (req, res) => {
     const { event_id } = req.params
-    taskModel
-      .find({ event_id }, (err, docs) => {
-        if (err) {
-          assert.equal(null, err)
-        }
-        res.json(
-          ApiResponse({
-            state: true,
-            data: docs
-          })
-        )
-      })
+    const result = await taskModel
+      .find({ event_id })
       .sort({ level: -1, date: -1, state: -1 })
-  },
-  findTaskByTaskId: (req, res) => {
-    const { task_id } = req.params
-    taskModel.findOne({ _id: task_id }, (err, doc) => {
-      if (err) {
-        assert.equal(null, err)
-      }
+    result &&
       res.json(
         ApiResponse({
           state: true,
-          data: doc
+          data: result
         })
       )
-    })
   },
-  addTask: (req, res) => {
-    const date = new Date().toISOString()
-    taskModel.create({ ...req.body, date }, (err, doc) => {
-      if (err) {
-        assert.equal(null, err)
-      }
+  findTaskByTaskId: async (req, res) => {
+    const { task_id } = req.params
+    const result = await taskModel.findOne({ _id: task_id })
+    result &&
       res.json(
         ApiResponse({
           state: true,
-          data: doc,
+          data: result
+        })
+      )
+  },
+  addTask: async (req, res) => {
+    const date = new Date().toISOString()
+    const result = await taskModel.create({ ...req.body, date })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result,
           message: '添加成功'
         })
       )
-    })
   },
-  editTask: (req, res) => {
+  editTask: async (req, res) => {
     const edit_time = new Date().toISOString()
     const { state, _id } = req.body
     const task_id = global.ObjectId(_id)
-    taskModel.updateOne({ _id: task_id }, { state, edit_time }, (err, doc) => {
-      if (err) {
-        assert.equal(null, err)
-      }
+    const result = await taskModel.updateOne(
+      { _id: task_id },
+      { state, edit_time }
+    )
+    result &&
       res.json(
         ApiResponse({
           state: true,
           message: '操作成功'
         })
       )
-    })
   }
 }
