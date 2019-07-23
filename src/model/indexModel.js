@@ -3,84 +3,59 @@ const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 
 module.exports = {
-  login: (req, res) => {
+  login: async (req, res) => {
     const { name, password } = req.body
-    userModel.find({ name }, (err, docs) => {
-      if (err) {
-        assert.equal(null, err)
-      }
-      if (docs.length > 0) {
-        let index = docs.findIndex(v => v.password === password)
-        if (index !== -1) {
-          res.json(
-            ApiResponse({
-              state: true,
-              data: docs[index],
-              message: '登录成功'
-            })
-          )
-        } else {
-          res.json(
-            ApiResponse({
-              state: false,
-              message: '密码不正确'
-            })
-          )
-        }
+    const result = await userModel.find({ name })
+    let state = true
+    let data = []
+    let message = ''
+    if (result.length > 0) {
+      let index = result.findIndex(v => v.password === password)
+      if (index !== -1) {
+        data = result[index]
+        message = '登录成功'
       } else {
-        res.json(
-          ApiResponse({
-            state: false,
-            message: '用户不存在'
-          })
-        )
+        state = false
+        message = '密码不正确'
       }
-    })
+    } else {
+      state = false
+      message = '用户不存在'
+    }
+    res.json(ApiResponse({ state, data, message }))
   },
-  register: (req, res) => {
+  register: async (req, res) => {
     const date = new Date().toISOString()
-    userModel.findOne({ ...req.body }, (err, doc) => {
-      if (err) {
-        assert.equal(null, err)
-      }
-      if (doc) {
-        res.json(
-          ApiResponse({
-            state: false,
-            message: '账号已存在，请登录'
-          })
-        )
+    const result = await userModel.findOne({ ...req.body })
+    let state = true
+    let data = []
+    let message = ''
+    if (result) {
+      state = false
+      message = '账号已存在，请登录'
+    } else {
+      const createResult = userModel.create({ ...req.body, date })
+      if (createResult) {
+        data = createResult
+        message = '注册成功，自动登录中'
       } else {
-        userModel.create({ ...req.body, date }, (err, doc) => {
-          if (err) {
-            assert.equal(null, err)
-          }
-          res.json(
-            ApiResponse({
-              state: true,
-              data: doc,
-              message: '注册成功，自动登录中'
-            })
-          )
-        })
+        state = false
+        message = '注册失败，请重试'
       }
-    })
+    }
+    res.json(ApiResponse({ state, data, message }))
   },
-  findEventsByUserId: (req, res) => {
+  findEventsByUserId: async (req, res) => {
     const { user_id } = req.params
-    eventModel
-      .find({ user_id }, (err, docs) => {
-        if (err) {
-          assert.equal(null, err)
-        }
-        res.json(
-          ApiResponse({
-            state: true,
-            data: docs
-          })
-        )
-      })
+    const result = await eventModel
+      .find({ user_id })
       .sort({ level: -1, date: -1 })
+    res.json(
+      ApiResponse({
+        state: result && true,
+        data: result
+      })
+    )
   },
   addEvents: (req, res) => {
     const date = new Date().toISOString()
