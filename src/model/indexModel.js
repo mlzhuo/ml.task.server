@@ -1,4 +1,3 @@
-const YAML = require('yamljs')
 const request = require('request')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
@@ -16,7 +15,7 @@ module.exports = {
       if (index !== -1) {
         data = {
           ...result[index]._doc,
-          access_token: global.tempAccessToken.access_token
+          access_token: global.access_token
         }
         message = '登录成功'
       } else {

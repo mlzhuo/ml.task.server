@@ -26,7 +26,7 @@ router.post('/tasks/add', (req, res) => {
 router.post('/tasks/edit', (req, res) => {
   indexModel.editTask(req, res)
 })
-router.get('/checksignature', (req, res) => {
+router.get('/wxmessage', (req, res) => {
   checkSignature(req, res)
 })
 module.exports = router
