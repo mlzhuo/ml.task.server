@@ -1,18 +1,23 @@
-const assert = require('assert')
+const YAML = require('yamljs')
+const request = require('request')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
+const { AppID, AppSecret, TemplateId } = global.config
 
 module.exports = {
   login: async (req, res) => {
-    const { name, password } = req.body
+    const { name, password, code } = req.body
     const result = await userModel.find({ name })
     let state = true
-    let data = []
+    let data = {}
     let message = ''
     if (result.length > 0) {
       let index = result.findIndex(v => v.password === password)
       if (index !== -1) {
-        data = result[index]
+        data = {
+          ...result[index]._doc,
+          access_token: global.tempAccessToken.access_token
+        }
         message = '登录成功'
       } else {
         state = false
@@ -22,7 +27,18 @@ module.exports = {
       state = false
       message = '用户不存在'
     }
-    res.json(ApiResponse({ state, data, message }))
+
+    request(
+      `https://api.weixin.qq.com/sns/jscode2session?appid=${AppID}&secret=${AppSecret}&js_code=${code}&grant_type=authorization_code`,
+      function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          const openid = JSON.parse(body).openid
+          userModel.updateOne({ _id: data._id }, { openid }, (err, doc) => {
+            res.json(ApiResponse({ state, data, message }))
+          })
+        }
+      }
+    )
   },
   register: async (req, res) => {
     const date = new Date().toISOString()

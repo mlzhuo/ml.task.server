@@ -4,7 +4,8 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
   name: { type: String },
   password: { type: String },
-  date: { type: Date }
+  date: { type: Date },
+  openid: { type: String }
 })
 
 const eventSchema = new Schema({

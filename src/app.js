@@ -4,7 +4,7 @@ var path = require('path')
 var cookieParser = require('cookie-parser')
 var logger = require('morgan')
 const bodyParser = require('body-parser')
-
+const { getAccessToken, getTemplateLibraryById } = require('./utils/wxUtils')
 var indexRouter = require('./routes/index')
 var app = express()
 app.all('*', (req, res, next) => {
@@ -49,5 +49,8 @@ app.use(function(err, req, res, next) {
     error: err
   })
 })
+
+getAccessToken()
+setInterval(getAccessToken, 7150 * 1000)
 
 module.exports = app
