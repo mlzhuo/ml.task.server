@@ -35,7 +35,7 @@ const getTemplateLibraryById = access_token => {
 
 const checkSignature = (req, res) => {
   const { signature, timestamp, nonce } = req.query
-  let str = `nonce=${nonce}&timestamp=${timestamp}&token=${Token}`
+  let str = `nonce=${nonce}&server_token=${Token}&timestamp=${timestamp}`
   const shaObj = new jsSHA(str, 'TEXT')
   const signatureTemp = shaObj.getHash('SHA-1', 'HEX')
   if (signatureTemp === signature) {
