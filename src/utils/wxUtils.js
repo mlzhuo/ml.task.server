@@ -57,13 +57,14 @@ const getTemplateLibraryList = access_token => {
   )
 }
 
-const sendMessage = async (touser, kValue1, kValue2) => {
+const sendMessage = async (touser, form_id, kValue1, kValue2) => {
   const { access_token, template } = global.config
   const template_id = template.template_id
   const body = {
     touser,
     template_id,
     page: 'pages/login/main',
+    form_id,
     data: {
       keyword1: {
         value: '1'
@@ -95,8 +96,8 @@ const sendMessageEachDay = async () => {
   const users = await userModel.find({ openid: { $ne: null } })
   // const tasks = await taskModel.find({}).sort({ date: -1 })
   users.forEach(v => {
-    const { openid } = v
-    sendMessage(openid)
+    const { openid, formId } = v
+    sendMessage(openid, formId)
   })
 }
 
