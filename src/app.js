@@ -4,7 +4,8 @@ var path = require('path')
 var cookieParser = require('cookie-parser')
 var logger = require('morgan')
 const bodyParser = require('body-parser')
-const { getAccessToken } = require('./utils/wxUtils')
+const schedule = require('node-schedule')
+const { getAccessToken, sendMessageEachDay } = require('./utils/wxUtils')
 var indexRouter = require('./routes/index')
 var app = express()
 app.all('*', (req, res, next) => {
@@ -52,5 +53,12 @@ app.use(function(err, req, res, next) {
 
 getAccessToken()
 setInterval(getAccessToken, 7150 * 1000)
+
+scheduleSendMessage()
+function scheduleSendMessage() {
+  schedule.scheduleJob('0 * * * * *', function() {
+    sendMessageEachDay()
+  })
+}
 
 module.exports = app

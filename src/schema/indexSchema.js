@@ -2,10 +2,17 @@ const mongoose = require('../db/db')
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
-  name: { type: String },
-  password: { type: String },
   date: { type: Date },
-  openid: { type: String }
+  openid: { type: String },
+  formId: { type: String },
+  nickName: { type: String },
+  gender: { type: Number },
+  language: { type: String },
+  city: { type: String },
+  province: { type: String },
+  country: { type: String },
+  avatarUrl: { type: String },
+  code: { type: String }
 })
 
 const eventSchema = new Schema({

@@ -52,17 +52,16 @@ const getTemplateLibraryList = access_token => {
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
         global.config.template = body.list[0]
-        sendMessage()
       }
     }
   )
 }
 
-const sendMessage = (touser, kValue1, kValue2) => {
+const sendMessage = async (touser, kValue1, kValue2) => {
   const { access_token, template } = global.config
   const template_id = template.template_id
   const body = {
-    touser: 'oax145IVFS0SGwFWCfkCHUX_eOXg',
+    touser,
     template_id,
     page: 'pages/login/main',
     data: {
@@ -86,7 +85,7 @@ const sendMessage = (touser, kValue1, kValue2) => {
     },
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        console.log('send message success')
+        console.log(body)
       }
     }
   )
@@ -94,10 +93,15 @@ const sendMessage = (touser, kValue1, kValue2) => {
 
 const sendMessageEachDay = async () => {
   const users = await userModel.find({ openid: { $ne: null } })
-  const tasks = await taskModel.find({}).sort({ date: -1 })
+  // const tasks = await taskModel.find({}).sort({ date: -1 })
+  users.forEach(v => {
+    const { openid } = v
+    sendMessage(openid)
+  })
 }
 
 module.exports = {
   checkSignature,
-  getAccessToken
+  getAccessToken,
+  sendMessageEachDay
 }

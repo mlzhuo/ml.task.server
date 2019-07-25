@@ -1,64 +1,30 @@
 const request = require('request')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
-const { AppID, AppSecret, TemplateId } = global.config
+const { AppID, AppSecret } = global.config
 
 module.exports = {
   login: async (req, res) => {
-    const { name, password, code } = req.body
-    const result = await userModel.find({ name })
-    let state = true
-    let data = {}
-    let message = ''
-    if (result.length > 0) {
-      let index = result.findIndex(v => v.password === password)
-      if (index !== -1) {
-        data = {
-          ...result[index]._doc,
-          access_token: global.access_token
-        }
-        message = '登录成功'
-      } else {
-        state = false
-        message = '密码不正确'
-      }
-    } else {
-      state = false
-      message = '用户不存在'
-    }
-
+    const { code } = req.body
     request(
       `https://api.weixin.qq.com/sns/jscode2session?appid=${AppID}&secret=${AppSecret}&js_code=${code}&grant_type=authorization_code`,
-      function(error, response, body) {
+      async (error, response, body) => {
         if (!error && response.statusCode == 200) {
           const openid = JSON.parse(body).openid
-          userModel.updateOne({ _id: data._id }, { openid }, (err, doc) => {
-            res.json(ApiResponse({ state, data, message }))
-          })
+          delete req.body.code
+          userModel.findOneAndUpdate(
+            { openid },
+            req.body,
+            { new: true, upsert: true },
+            (err, doc) => {
+              res.json(
+                ApiResponse({ state: true, data: doc, message: '登录成功' })
+              )
+            }
+          )
         }
       }
     )
-  },
-  register: async (req, res) => {
-    const date = new Date().toISOString()
-    const result = await userModel.findOne({ ...req.body })
-    let state = true
-    let data = []
-    let message = ''
-    if (result) {
-      state = false
-      message = '账号已存在，请登录'
-    } else {
-      const createResult = userModel.create({ ...req.body, date })
-      if (createResult) {
-        data = createResult
-        message = '注册成功，自动登录中'
-      } else {
-        state = false
-        message = '注册失败，请重试'
-      }
-    }
-    res.json(ApiResponse({ state, data, message }))
   },
   findEventsByUserId: async (req, res) => {
     const { user_id } = req.params

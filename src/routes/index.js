@@ -5,9 +5,6 @@ const { checkSignature } = require('../utils/wxUtils')
 router.post('/login', (req, res) => {
   indexModel.login(req, res)
 })
-router.post('/register', (req, res) => {
-  indexModel.register(req, res)
-})
 router.get('/events/:user_id', (req, res) => {
   indexModel.findEventsByUserId(req, res)
 })
