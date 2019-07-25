@@ -56,7 +56,7 @@ setInterval(getAccessToken, 7150 * 1000)
 
 scheduleSendMessage()
 function scheduleSendMessage() {
-  schedule.scheduleJob('0 * * * * *', function() {
+  schedule.scheduleJob('0 0 19 * * *', function() {
     sendMessageEachDay()
   })
 }

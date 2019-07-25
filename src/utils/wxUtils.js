@@ -67,10 +67,10 @@ const sendMessage = async (touser, form_id, kValue1, kValue2) => {
     form_id,
     data: {
       keyword1: {
-        value: '1'
+        value: kValue1
       },
       keyword2: {
-        value: '2'
+        value: kValue2
       }
     }
   }
@@ -92,12 +92,71 @@ const sendMessage = async (touser, form_id, kValue1, kValue2) => {
   )
 }
 
+const getEvents = async user_id => {
+  return await eventModel
+    .find({
+      user_id
+    })
+    .sort({ date: -1 })
+}
+
+const getTasks = async event_id => {
+  const date = new Date()
+  const today = new Date(
+    date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+  )
+  const start = new Date(today.getTime() - 7 * 24 * 3600 * 1000)
+  return await taskModel
+    .find({ event_id, state: 0, date: { $gte: start } })
+    .sort({ date: -1 })
+}
+
 const sendMessageEachDay = async () => {
   const users = await userModel.find({ openid: { $ne: null } })
-  // const tasks = await taskModel.find({}).sort({ date: -1 })
-  users.forEach(v => {
-    const { openid, formId } = v
-    sendMessage(openid, formId)
+  let eventsPromiseArr = users.map(user => {
+    return getEvents(user._id)
+  })
+  let userEvents = await Promise.all(eventsPromiseArr)
+  let tasksPromiseArr = userEvents.map(event => {
+    return event.map(item => {
+      return getTasks(item._id)
+    })
+  })
+  let userTasks = tasksPromiseArr.map(async task => {
+    return await Promise.all([...task])
+  })
+  let taskResult = await Promise.all([...userTasks])
+  taskResult.forEach((v, i) => {
+    taskResult[i] = v.filter(t => t.length > 0)
+    let tasksNames = []
+    let eventsNames = []
+    taskResult[i].forEach(v => {
+      const tempEvent = userEvents.find(vv => {
+        return vv.find(vvv => {
+          return vvv._id == v[0].event_id
+        })
+      })
+      eventsNames.push(tempEvent.find(vv => vv._id == v[0].event_id).title)
+      tasksNames.push(v[0].content)
+    })
+    tasksNames.reverse()
+    eventsNames.reverse()
+    const tempkValue1 =
+      eventsNames.length === 0
+        ? '最近的事情都完成了呢 😄'
+        : eventsNames.length > 3
+        ? `还有${eventsNames.slice(0, 3).join('，')}等${
+            eventsNames.length
+          }件事没有做完哦`
+        : `还有${eventsNames.join('，')}等${eventsNames.length}件事没有做完哦`
+    const tempkValue2 =
+      tasksNames.length === 0
+        ? '👀'
+        : tasksNames.length > 5
+        ? tasksNames.slice(0, 5).join('\r\n')
+        : tasksNames.join('\r\n')
+    const { openid, formId } = users[i]
+    sendMessage(openid, formId, tempkValue1, tempkValue2)
   })
 }
 
