@@ -1,6 +1,6 @@
 const request = require('request')
 const jsSHA = require('jssha')
-const { AppID, AppSecret, Token, EncodingAESKey } = global.config
+const { AppID, AppSecret, Token } = global.config
 const { ApiResponse } = require('../utils/apiUtils')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 
@@ -148,13 +148,18 @@ const sendMessageEachDay = async () => {
         ? `还有${eventsNames.slice(0, 3).join('，')}等${
             eventsNames.length
           }件事没有做完哦`
-        : `还有${eventsNames.join('，')}等${eventsNames.length}件事没有做完哦`
+        : `还有${eventsNames.join('，')}等${
+            eventsNames.length
+          }件事没有做完哦`
     const tempkValue2 =
       tasksNames.length === 0
-        ? '👀'
+        ? '继续保持，加油！'
         : tasksNames.length > 5
-        ? tasksNames.slice(0, 5).join('\r\n')
-        : tasksNames.join('\r\n')
+        ? tasksNames
+            .slice(0, 5)
+            .map(v => '⭐ ' + v)
+            .join('\r\n')
+        : tasksNames.map(v => '⭐ ' + v).join('\r\n')
     const { openid, formId } = users[i]
     sendMessage(openid, formId, tempkValue1, tempkValue2)
   })
