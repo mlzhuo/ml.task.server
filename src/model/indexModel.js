@@ -12,9 +12,10 @@ module.exports = {
         if (!error && response.statusCode == 200) {
           const openid = JSON.parse(body).openid
           delete req.body.code
+          const last_date = new Date().toISOString()
           userModel.findOneAndUpdate(
             { openid },
-            req.body,
+            { ...req.body, last_date },
             { new: true, upsert: true },
             (err, doc) => {
               res.json(
@@ -30,7 +31,18 @@ module.exports = {
     const { user_id } = req.params
     const result = await eventModel
       .find({ user_id })
-      .sort({ level: -1, date: -1 })
+      .sort({ level: -1, edit_time: -1, date: -1 })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result
+        })
+      )
+  },
+  findEventByEventId: async (req, res) => {
+    const { user_id, event_id } = req.params
+    const result = await eventModel.findOne({ user_id, _id: event_id })
     result &&
       res.json(
         ApiResponse({
@@ -41,13 +53,28 @@ module.exports = {
   },
   addEvents: async (req, res) => {
     const date = new Date().toISOString()
-    const result = await eventModel.create({ ...req.body, date })
+    const edit_time = date
+    const result = await eventModel.create({ ...req.body, date, edit_time })
     result &&
       res.json(
         ApiResponse({
           state: true,
           data: result,
           message: '添加成功'
+        })
+      )
+  },
+  editEvents: async (req, res) => {
+    const edit_time = new Date().toISOString()
+    const { event_id, title, description, level } = req.body
+    const doc = title ? { title, description, level, edit_time } : { edit_time }
+    const _id = global.ObjectId(event_id)
+    const result = await eventModel.updateOne({ _id }, doc)
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '操作成功'
         })
       )
   },
@@ -77,7 +104,8 @@ module.exports = {
   },
   addTask: async (req, res) => {
     const date = new Date().toISOString()
-    const result = await taskModel.create({ ...req.body, date })
+    const edit_time = date
+    const result = await taskModel.create({ ...req.body, date, edit_time })
     result &&
       res.json(
         ApiResponse({

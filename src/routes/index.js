@@ -5,24 +5,39 @@ const { checkSignature } = require('../utils/wxUtils')
 router.post('/login', (req, res) => {
   indexModel.login(req, res)
 })
-router.get('/events/:user_id', (req, res) => {
+
+// event
+
+router.get('/:user_id/events', (req, res) => {
   indexModel.findEventsByUserId(req, res)
 })
-router.post('/events/add', (req, res) => {
+router.post('/:user_id/events', (req, res) => {
   indexModel.addEvents(req, res)
 })
-router.get('/events/:event_id/tasks', (req, res) => {
+router.put('/:user_id/events', (req, res) => {
+  indexModel.editEvents(req, res)
+})
+router.get('/:user_id/events/:event_id', (req, res) => {
+  indexModel.findEventByEventId(req, res)
+})
+
+// task
+
+router.get('/:event_id/tasks', (req, res) => {
   indexModel.findTasksByEventId(req, res)
 })
-router.get('/tasks/:task_id', (req, res) => {
-  indexModel.findTaskByTaskId(req, res)
-})
-router.post('/tasks/add', (req, res) => {
+router.post('/:event_id/tasks', (req, res) => {
   indexModel.addTask(req, res)
 })
-router.post('/tasks/edit', (req, res) => {
+router.put('/:event_id/tasks', (req, res) => {
   indexModel.editTask(req, res)
 })
+router.get('/:event_id/tasks/:task_id', (req, res) => {
+  indexModel.findTaskByTaskId(req, res)
+})
+
+// wx push
+
 router.get('/wxmessage', (req, res) => {
   checkSignature(req, res)
 })
