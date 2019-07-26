@@ -105,7 +105,9 @@ module.exports = {
   addTask: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
-    const result = await taskModel.create({ ...req.body, date, edit_time })
+    const {content, level, event_id} = req.body
+    const result = await taskModel.create({ content, level, date, edit_time })
+    await eventModel.updateOne({ _id: event_id }, { edit_time })
     result &&
       res.json(
         ApiResponse({
@@ -117,10 +119,11 @@ module.exports = {
   },
   editTask: async (req, res) => {
     const edit_time = new Date().toISOString()
-    const { state, task_id, content, level } = req.body
+    const { state, task_id, content, level, event_id } = req.body
     const _id = global.ObjectId(task_id)
     const doc = state ? { state, edit_time } : { edit_time, content, level }
     const result = await taskModel.updateOne({ _id }, doc)
+    await eventModel.updateOne({ _id: event_id }, { edit_time })
     result &&
       res.json(
         ApiResponse({
