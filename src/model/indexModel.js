@@ -105,8 +105,14 @@ module.exports = {
   addTask: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
-    const {content, level, event_id} = req.body
-    const result = await taskModel.create({ content, level, date, edit_time })
+    const { content, level, event_id } = req.body
+    const result = await taskModel.create({
+      event_id,
+      content,
+      level,
+      date,
+      edit_time
+    })
     await eventModel.updateOne({ _id: event_id }, { edit_time })
     result &&
       res.json(
