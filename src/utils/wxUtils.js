@@ -57,7 +57,7 @@ const getTemplateLibraryList = access_token => {
   )
 }
 
-const sendMessage = async (touser, form_id, kValue1, kValue2) => {
+const sendMessage = async (touser, form_id, kValue1, kValue2, callback) => {
   const { access_token, template } = global.config
   const template_id = template.template_id
   const body = {
@@ -86,7 +86,8 @@ const sendMessage = async (touser, form_id, kValue1, kValue2) => {
     },
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        console.log(body)
+        console.log('***', body)
+        callback && callback()
       }
     }
   )
@@ -126,42 +127,40 @@ const sendMessageEachDay = async () => {
     return await Promise.all([...task])
   })
   let taskResult = await Promise.all([...userTasks])
-  taskResult.forEach((v, i) => {
-    taskResult[i] = v.filter(t => t.length > 0)
-    let tasksNames = []
+  taskResult.forEach((eachUserTasks, i) => {
+    taskResult[i] = eachUserTasks.filter(t => t.length > 0)
+    let tasksContents = []
     let eventsNames = []
-    taskResult[i].forEach(v => {
-      const tempEvent = userEvents.find(vv => {
-        return vv.find(vvv => {
-          return vvv._id == v[0].event_id
-        })
-      })
-      eventsNames.push(tempEvent.find(vv => vv._id == v[0].event_id).title)
-      tasksNames.push(v[0].content)
+    taskResult[i].forEach(eachEventTasks => {
+      eventsNames.push(
+        userEvents[i].find(event => event._id == eachEventTasks[0].event_id)
+          .title
+      )
+      tasksContents = tasksContents.concat(
+        eachEventTasks.map(task => task.content)
+      )
     })
-    tasksNames.reverse()
-    eventsNames.reverse()
     const tempkValue1 =
       eventsNames.length === 0
-        ? '最近的事情都完成了呢 😄'
-        : eventsNames.length > 3
-        ? `还有${eventsNames.slice(0, 3).join('，')}等${
-            eventsNames.length
-          }件事没有做完哦`
-        : `还有${eventsNames.join('，')}等${
-            eventsNames.length
-          }件事没有做完哦`
+        ? '最近的事情都完成了呢。😄'
+        : `${eventsNames.join('，')}等${eventsNames.length}件事中的${
+            tasksContents.length
+          }条记录尚未完成。`
     const tempkValue2 =
-      tasksNames.length === 0
+      tasksContents.length === 0
         ? '继续保持，加油！'
-        : tasksNames.length > 5
-        ? tasksNames
-            .slice(0, 5)
-            .map(v => '⭐ ' + v)
-            .join('\r\n')
-        : tasksNames.map(v => '⭐ ' + v).join('\r\n')
+        : tasksContents.map((v, i) => i + 1 + '.' + v).join('\r\n')
     const { openid, formId } = users[i]
-    sendMessage(openid, formId, tempkValue1, tempkValue2)
+    if (formId && formId.split(',').length > 0) {
+      const formid = formId.split(',')[0]
+      sendMessage(openid, formid, tempkValue1, tempkValue2, () => {
+        const lastFormIds = formId.split(',').slice(1)
+        userModel.findOneAndUpdate(
+          { openid },
+          { formId: lastFormIds.join(',') }
+        )
+      })
+    }
   })
 }
 

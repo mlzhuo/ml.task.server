@@ -13,16 +13,35 @@ module.exports = {
           const openid = JSON.parse(body).openid
           delete req.body.code
           const last_date = new Date().toISOString()
-          userModel.findOneAndUpdate(
-            { openid },
-            { ...req.body, last_date },
-            { new: true, upsert: true },
-            (err, doc) => {
-              res.json(
-                ApiResponse({ state: true, data: doc, message: '登录成功' })
-              )
-            }
-          )
+          const user = await userModel.findOne({ openid })
+          if (user) {
+            const formIdFromResBody = req.body.formId
+            let formIdFromUser = user.formId.split(',')
+            formIdFromUser.push(formIdFromResBody)
+            const formIds = formIdFromUser.slice(-7).join(',')
+            delete req.body.formId
+            userModel.findOneAndUpdate(
+              { openid },
+              { ...req.body, last_date, formId: formIds },
+              (err, doc) => {
+                console.log(doc);
+                res.json(
+                  ApiResponse({ state: true, data: doc, message: '登录成功' })
+                )
+              }
+            )
+          } else {
+            userModel.findOneAndUpdate(
+              { openid },
+              { ...req.body, last_date },
+              { new: true, upsert: true },
+              (err, doc) => {
+                res.json(
+                  ApiResponse({ state: true, data: doc, message: '登录成功' })
+                )
+              }
+            )
+          }
         }
       }
     )
