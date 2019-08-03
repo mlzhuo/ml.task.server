@@ -20,6 +20,9 @@ router.put('/:user_id/events', (req, res) => {
 router.get('/:user_id/events/:event_id', (req, res) => {
   indexModel.findEventByEventId(req, res)
 })
+router.get('/:user_id/statistics', (req, res) => {
+  indexModel.eventStatistics(req, res)
+})
 
 // task
 

@@ -29,7 +29,6 @@ module.exports = {
               { openid },
               { ...req.body, last_date, formId: formIds },
               (err, doc) => {
-                console.log(doc)
                 res.json(
                   ApiResponse({ state: true, data: doc, message: '登录成功' })
                 )
@@ -101,6 +100,39 @@ module.exports = {
           message: '操作成功'
         })
       )
+  },
+  eventStatistics: async (req, res) => {
+    const { user_id } = req.params
+    const allEvents = await eventModel.find({ user_id })
+    let tasks = allEvents.map(async event => {
+      return {
+        event_id: event._id,
+        data: await taskModel.find({ event_id: event._id })
+      }
+    })
+    let tasksResult = await Promise.all([...tasks])
+    let tasksStatisticObj = {}
+    tasksResult.forEach(eachEventTasks => {
+      const { event_id, data } = eachEventTasks
+      if (data.length === 0) {
+        tasksStatisticObj[event_id] = {
+          isDone: 0,
+          all: 0
+        }
+      } else {
+        const isDone = data.filter(v => v.state === 1).length
+        tasksStatisticObj[event_id] = {
+          isDone,
+          all: data.length
+        }
+      }
+    })
+    res.json(
+      ApiResponse({
+        state: true,
+        data: tasksStatisticObj
+      })
+    )
   },
   findTasksByEventId: async (req, res) => {
     const { event_id } = req.params
