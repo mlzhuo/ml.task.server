@@ -102,14 +102,7 @@ const getEvents = async user_id => {
 }
 
 const getTasks = async event_id => {
-  const date = new Date()
-  const today = new Date(
-    date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
-  )
-  const start = new Date(today.getTime() - 7 * 24 * 3600 * 1000)
-  return await taskModel
-    .find({ event_id, state: 0, date: { $gte: start } })
-    .sort({ date: -1 })
+  return await taskModel.find({ event_id, state: 0 }).sort({ date: -1 })
 }
 
 const sendMessageEachDay = async () => {
