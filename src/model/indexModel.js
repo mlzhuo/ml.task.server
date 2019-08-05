@@ -138,7 +138,7 @@ module.exports = {
     const { event_id } = req.params
     const result = await taskModel
       .find({ event_id })
-      .sort({ level: -1, date: -1, state: -1 })
+      .sort({ date: -1, state: -1, level: -1 })
     result &&
       res.json(
         ApiResponse({
