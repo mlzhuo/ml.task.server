@@ -86,7 +86,7 @@ const sendMessage = async (touser, form_id, kValue1, kValue2, callback) => {
     },
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        console.log('***', body)
+        // console.log('wx send message result', body)
         callback && callback()
       }
     }
@@ -150,7 +150,12 @@ const sendMessageEachDay = async () => {
         const lastFormIds = formId.split(',').slice(1)
         userModel.findOneAndUpdate(
           { openid },
-          { formId: lastFormIds.join(',') }
+          { formId: lastFormIds.join(',') },
+          (err, doc) => {
+            if (err) {
+              console.log('err', err)
+            }
+          }
         )
       })
     }

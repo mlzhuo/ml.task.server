@@ -51,11 +51,14 @@ app.use(function(err, req, res, next) {
   })
 })
 
+// 每两个小时更新 access_token
 getAccessToken()
 setInterval(getAccessToken, 7150 * 1000)
+
+// 每天18:30 推送消息
 scheduleSendMessage()
 function scheduleSendMessage() {
-  schedule.scheduleJob('0 0 19 * * *', function() {
+  schedule.scheduleJob('0 30 18 * * *', function() {
     sendMessageEachDay()
   })
 }
