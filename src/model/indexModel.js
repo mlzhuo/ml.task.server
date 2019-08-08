@@ -1,9 +1,27 @@
 const request = require('request')
-const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
+const {
+  userModel,
+  eventModel,
+  taskModel,
+  logModel
+} = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 const { AppID, AppSecret } = global.config
 
+const insertLog = ({ user_id, user_name, openid, type, description }) => {
+  let doc = {
+    user_id,
+    user_name,
+    openid,
+    type,
+    description: description || 'ok',
+    date: new Date().toISOString()
+  }
+  logModel.create(doc)
+}
+
 module.exports = {
+  insertLog,
   login: async (req, res) => {
     const { code } = req.body
     request(
@@ -15,6 +33,9 @@ module.exports = {
           const last_date = new Date().toISOString()
           const user = await userModel.findOne({ openid })
           if (user) {
+            const isNewUser =
+              new Date(user.date).getDate() ===
+              new Date(last_date).getDate()
             let formIds
             const formIdFromResBody = req.body.formId
             if (user.formId) {
@@ -27,8 +48,15 @@ module.exports = {
             delete req.body.formId
             userModel.findOneAndUpdate(
               { openid },
-              { ...req.body, last_date, formId: formIds },
+              { ...req.body, last_date, formId: formIds, isNewUser },
               (err, doc) => {
+                insertLog({
+                  user_id: doc._id,
+                  user_name: doc.nickName,
+                  openid: doc.openid,
+                  type: 'login',
+                  description: err
+                })
                 res.json(
                   ApiResponse({ state: true, data: doc, message: '登录成功' })
                 )
@@ -37,15 +65,27 @@ module.exports = {
           } else {
             userModel.findOneAndUpdate(
               { openid },
-              { ...req.body, last_date },
+              { ...req.body, date: last_date, last_date, isNewUser: true },
               { new: true, upsert: true },
               (err, doc) => {
+                insertLog({
+                  user_id: doc._id,
+                  user_name: doc.nickName,
+                  openid: doc.openid,
+                  type: 'login',
+                  description: err
+                })
                 res.json(
                   ApiResponse({ state: true, data: doc, message: '登录成功' })
                 )
               }
             )
           }
+        } else {
+          insertLog({
+            type: 'login',
+            description: error
+          })
         }
       }
     )

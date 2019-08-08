@@ -3,6 +3,7 @@ const jsSHA = require('jssha')
 const { AppID, AppSecret, Token } = global.config
 const { ApiResponse } = require('../utils/apiUtils')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
+const { insertLog } = require('../model/indexModel')
 
 const checkSignature = (req, res) => {
   const { signature, timestamp, nonce, echostr } = req.query
@@ -26,6 +27,7 @@ const getAccessToken = () => {
   request(
     `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${AppID}&secret=${AppSecret}`,
     function(error, response, body) {
+      insertLog({ type: 'access_token', description: error })
       if (!error && response.statusCode == 200) {
         const { access_token } = JSON.parse(body)
         global.config.access_token = access_token
@@ -86,7 +88,11 @@ const sendMessage = async (touser, form_id, kValue1, kValue2, callback) => {
     },
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        // console.log('wx send message result', body)
+        insertLog({
+          openid: touser,
+          type: 'send_message',
+          description: body.errmsg
+        })
         callback && callback()
       }
     }

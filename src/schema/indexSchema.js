@@ -2,6 +2,7 @@ const mongoose = require('../db/db')
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
+  date: { type: Date },
   last_date: { type: Date },
   openid: { type: String },
   formId: { type: String },
@@ -12,6 +13,7 @@ const userSchema = new Schema({
   province: { type: String },
   country: { type: String },
   avatarUrl: { type: String },
+  isNewUser: { type: Boolean }
 })
 
 const eventSchema = new Schema({
@@ -32,8 +34,18 @@ const taskSchema = new Schema({
   event_id: { type: String }
 })
 
+const logSchema = new Schema({
+  description: { type: String },
+  user_id: { type: String },
+  user_name: { type: String },
+  openid: { type: String },
+  type: { type: String },
+  date: { type: Date }
+})
+
 module.exports = {
   userModel: mongoose.model('User', userSchema),
   eventModel: mongoose.model('Event', eventSchema),
-  taskModel: mongoose.model('Task', taskSchema)
+  taskModel: mongoose.model('Task', taskSchema),
+  logModel: mongoose.model('Log', logSchema)
 }
