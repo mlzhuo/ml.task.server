@@ -27,11 +27,12 @@ const getAccessToken = () => {
   request(
     `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${AppID}&secret=${AppSecret}`,
     function(error, response, body) {
-      insertLog({ type: 'access_token', description: error })
       if (!error && response.statusCode == 200) {
         const { access_token } = JSON.parse(body)
         global.config.access_token = access_token
         getTemplateLibraryList(access_token)
+      } else {
+        insertLog({ type: 'access_token', description: error })
       }
     }
   )
