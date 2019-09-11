@@ -32,49 +32,63 @@ module.exports = {
           delete req.body.code
           const last_date = new Date().toISOString()
           const user = await userModel.findOne({ openid })
+          const devToolFormId = 'the formId is a mock one'
+          const formIdFromResBody = req.body.formId
+          const flag = formIdFromResBody !== devToolFormId
           if (user) {
             const isNewUser =
-              new Date(user.date).getDate() ===
-              new Date(last_date).getDate()
+              new Date(user.date).getDate() === new Date(last_date).getDate()
             let formIds
-            const formIdFromResBody = req.body.formId
             if (user.formId) {
               let formIdFromUser = user.formId.split(',')
-              formIdFromUser.push(formIdFromResBody)
+              flag && formIdFromUser.push(formIdFromResBody)
               formIds = formIdFromUser.slice(-7).join(',')
             } else {
-              formIds = formIdFromResBody
+              if (flag) {
+                formIds = formIdFromResBody
+              }
             }
             delete req.body.formId
             userModel.findOneAndUpdate(
               { openid },
               { ...req.body, last_date, formId: formIds, isNewUser },
               (err, doc) => {
-                insertLog({
-                  user_id: doc._id,
-                  user_name: doc.nickName,
-                  openid: doc.openid,
-                  type: 'login',
-                  description: err
-                })
+                flag &&
+                  insertLog({
+                    user_id: doc._id,
+                    user_name: doc.nickName,
+                    openid: doc.openid,
+                    type: 'login',
+                    description: err
+                  })
                 res.json(
                   ApiResponse({ state: true, data: doc, message: '登录成功' })
                 )
               }
             )
           } else {
+            if (!flag) {
+              delete req.body.formId
+            }
             userModel.findOneAndUpdate(
               { openid },
-              { ...req.body, date: last_date, last_date, isNewUser: true },
+              {
+                ...req.body,
+                formId: '',
+                date: last_date,
+                last_date,
+                isNewUser: true
+              },
               { new: true, upsert: true },
               (err, doc) => {
-                insertLog({
-                  user_id: doc._id,
-                  user_name: doc.nickName,
-                  openid: doc.openid,
-                  type: 'login',
-                  description: err
-                })
+                flag &&
+                  insertLog({
+                    user_id: doc._id,
+                    user_name: doc.nickName,
+                    openid: doc.openid,
+                    type: 'login',
+                    description: err
+                  })
                 res.json(
                   ApiResponse({ state: true, data: doc, message: '登录成功' })
                 )
