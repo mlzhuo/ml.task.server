@@ -44,4 +44,15 @@ router.get('/:event_id/tasks/:task_id', (req, res) => {
 router.get('/wxmessage', (req, res) => {
   checkSignature(req, res)
 })
+
+// version
+
+router.get('/version', (req, res) => {
+  indexModel.findAllVersion(req, res)
+})
+
+router.post('/version', (req, res) => {
+  indexModel.releaseNewVersion(req, res)
+})
+
 module.exports = router

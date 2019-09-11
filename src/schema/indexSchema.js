@@ -43,9 +43,16 @@ const logSchema = new Schema({
   date: { type: Date }
 })
 
+const versionSchema = new Schema({
+  version: { type: String },
+  description: { type: String },
+  date: { type: Date }
+})
+
 module.exports = {
   userModel: mongoose.model('User', userSchema),
   eventModel: mongoose.model('Event', eventSchema),
   taskModel: mongoose.model('Task', taskSchema),
-  logModel: mongoose.model('Log', logSchema)
+  logModel: mongoose.model('Log', logSchema),
+  versionModel: mongoose.model('Version', versionSchema)
 }

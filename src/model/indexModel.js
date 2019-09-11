@@ -3,7 +3,8 @@ const {
   userModel,
   eventModel,
   taskModel,
-  logModel
+  logModel,
+  versionModel
 } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 const { AppID, AppSecret } = global.config
@@ -245,6 +246,28 @@ module.exports = {
         ApiResponse({
           state: true,
           message: '操作成功'
+        })
+      )
+  },
+  findAllVersion: async (req, res) => {
+    const result = await versionModel.find({}).sort({ date: -1 })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result
+        })
+      )
+  },
+  releaseNewVersion: async (req, res) => {
+    const date = new Date().toISOString()
+    const result = await versionModel.create({ ...req.body, date })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result,
+          message: '发布成功'
         })
       )
   }
