@@ -22,7 +22,8 @@ const eventSchema = new Schema({
   date: { type: Date },
   edit_time: { type: Date },
   level: { type: Number, default: 0 },
-  user_id: { type: String }
+  user_id: { type: String },
+  openid: { type: String }
 })
 
 const taskSchema = new Schema({
