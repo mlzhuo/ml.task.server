@@ -22,8 +22,7 @@ const eventSchema = new Schema({
   date: { type: Date },
   edit_time: { type: Date },
   level: { type: Number, default: 0 },
-  user_id: { type: String },
-  openid: { type: String }
+  user_id: { type: String }
 })
 
 const taskSchema = new Schema({
@@ -52,19 +51,23 @@ const versionSchema = new Schema({
 
 const punchSchema = new Schema({
   date: { type: Date },
+  edit_time: { type: Date },
+  state: { type: Number, default: 0 },
   start_date: { type: Date },
   end_date: { type: Date },
   description: { type: String },
-  openid: { type: String },
-  punchHistory: { type: Array }
+  user_id: { type: String },
+  punchHistory: { type: Object }
 })
 
 const countdownSchema = new Schema({
   date: { type: Date },
+  edit_time: { type: Date },
+  state: { type: Number, default: 0 },
   start_date: { type: Date },
   end_date: { type: Date },
   description: { type: String },
-  openid: { type: String }
+  user_id: { type: String }
 })
 
 module.exports = {

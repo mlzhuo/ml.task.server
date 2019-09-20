@@ -55,4 +55,16 @@ router.post('/version', (req, res) => {
   indexModel.releaseNewVersion(req, res)
 })
 
+// punch
+
+router.get('/:user_id/punch', (req, res) => {
+  indexModel.findAllPunch(req, res)
+})
+router.post('/:user_id/punch', (req, res) => {
+  indexModel.addPunch(req, res)
+})
+router.put('/:user_id/punch', (req, res) => {
+  indexModel.editPunch(req, res)
+})
+
 module.exports = router

@@ -282,5 +282,81 @@ module.exports = {
           message: '发布成功'
         })
       )
+  },
+  findAllPunch: async (req, res) => {
+    const { user_id } = req.params
+    const result = await punchModel.find({ user_id })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result
+        })
+      )
+  },
+  addPunch: async (req, res) => {
+    const date = new Date().toISOString()
+    const edit_time = date
+    const state = 0
+    const punchHistory = {}
+    const obj = {
+      date,
+      state,
+      edit_time,
+      punchHistory,
+      ...req.body
+    }
+    const result = await punchModel.create(obj)
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result,
+          message: '添加成功'
+        })
+      )
+  },
+  editPunch: async (req, res) => {
+    const edit_time = new Date().toISOString()
+    const {
+      punch_id,
+      today,
+      state,
+      start_date,
+      end_date,
+      description
+    } = req.body
+    if (today) {
+      const punch = await punchModel.findOne({ _id: punch_id })
+      const result = await punchModel.updateOne(
+        { _id: punch_id },
+        {
+          punchHistory: {
+            ...punch.punchHistory,
+            [today]: new Date().toISOString()
+          },
+          edit_time
+        }
+      )
+      result &&
+        res.json(
+          ApiResponse({
+            state: true,
+            message: '打卡成功'
+          })
+        )
+    } else {
+      const result = await punchModel.updateOne(
+        { _id: punch_id },
+        { state, start_date, end_date, description, edit_time }
+      )
+      result &&
+        res.json(
+          ApiResponse({
+            state: true,
+            message: '编辑成功'
+          })
+        )
+    }
   }
 }
