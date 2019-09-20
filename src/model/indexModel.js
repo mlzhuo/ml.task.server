@@ -4,7 +4,9 @@ const {
   eventModel,
   taskModel,
   logModel,
-  versionModel
+  versionModel,
+  punchModel,
+  countdownModel
 } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 const { AppID, AppSecret } = global.config
@@ -62,8 +64,13 @@ module.exports = {
                     type: 'login',
                     description: err
                   })
+                const { _id, openid } = doc
                 res.json(
-                  ApiResponse({ state: true, data: doc, message: '登录成功' })
+                  ApiResponse({
+                    state: true,
+                    data: { _id, openid },
+                    message: '登录成功'
+                  })
                 )
               }
             )
@@ -90,8 +97,13 @@ module.exports = {
                     type: 'login',
                     description: err
                   })
+                const { _id, openid } = doc
                 res.json(
-                  ApiResponse({ state: true, data: doc, message: '登录成功' })
+                  ApiResponse({
+                    state: true,
+                    data: { _id, openid },
+                    message: '登录成功'
+                  })
                 )
               }
             )

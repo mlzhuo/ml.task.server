@@ -49,10 +49,29 @@ const versionSchema = new Schema({
   date: { type: Date }
 })
 
+const punchSchema = new Schema({
+  date: { type: Date },
+  start_date: { type: Date },
+  end_date: { type: Date },
+  description: { type: String },
+  openid: { type: String },
+  punchHistory: { type: Array }
+})
+
+const countdownSchema = new Schema({
+  date: { type: Date },
+  start_date: { type: Date },
+  end_date: { type: Date },
+  description: { type: String },
+  openid: { type: String }
+})
+
 module.exports = {
   userModel: mongoose.model('User', userSchema),
   eventModel: mongoose.model('Event', eventSchema),
   taskModel: mongoose.model('Task', taskSchema),
   logModel: mongoose.model('Log', logSchema),
-  versionModel: mongoose.model('Version', versionSchema)
+  versionModel: mongoose.model('Version', versionSchema),
+  punchModel: mongoose.model('Punch', punchSchema),
+  countdownModel: mongoose.model('Countdown', countdownSchema)
 }
