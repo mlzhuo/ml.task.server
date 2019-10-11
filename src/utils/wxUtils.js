@@ -143,9 +143,9 @@ const sendMessageEachDay = async () => {
     const tempkValue1 =
       eventsNames.length === 0
         ? '最近的事情都完成了呢。😄'
-        : `${eventsNames.join('，')}等${eventsNames.length}件事中的${
+        : `${eventsNames.join('，')}等${eventsNames.length}个分类中的${
             tasksContents.length
-          }条记录尚未完成。`
+          }条记录尚未确认。`
     const tempkValue2 =
       tasksContents.length === 0
         ? '继续保持，加油！'

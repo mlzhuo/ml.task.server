@@ -324,6 +324,7 @@ module.exports = {
       state,
       start_date,
       end_date,
+      name,
       description
     } = req.body
     if (today) {
@@ -348,7 +349,7 @@ module.exports = {
     } else {
       const result = await punchModel.updateOne(
         { _id: punch_id },
-        { state, start_date, end_date, description, edit_time }
+        { state, start_date, end_date, name, description, edit_time }
       )
       result &&
         res.json(

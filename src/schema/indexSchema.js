@@ -55,6 +55,7 @@ const punchSchema = new Schema({
   state: { type: Number, default: 0 },
   start_date: { type: Date },
   end_date: { type: Date },
+  name: { type: String },
   description: { type: String },
   user_id: { type: String },
   punchHistory: { type: Object }
@@ -66,6 +67,7 @@ const countdownSchema = new Schema({
   state: { type: Number, default: 0 },
   start_date: { type: Date },
   end_date: { type: Date },
+  name: { type: String },
   description: { type: String },
   user_id: { type: String }
 })
