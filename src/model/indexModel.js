@@ -39,8 +39,6 @@ module.exports = {
           const formIdFromResBody = req.body.formId
           const flag = formIdFromResBody !== devToolFormId
           if (user) {
-            const isNewUser =
-              new Date(user.date).getDate() === new Date(last_date).getDate()
             let formIds
             if (user.formId) {
               let formIdFromUser = user.formId.split(',')
@@ -54,7 +52,7 @@ module.exports = {
             delete req.body.formId
             userModel.findOneAndUpdate(
               { openid },
-              { ...req.body, last_date, formId: formIds, isNewUser },
+              { ...req.body, last_date, formId: formIds },
               (err, doc) => {
                 flag &&
                   insertLog({
@@ -84,8 +82,7 @@ module.exports = {
                 ...req.body,
                 formId: '',
                 date: last_date,
-                last_date,
-                isNewUser: true
+                last_date
               },
               { new: true, upsert: true },
               (err, doc) => {

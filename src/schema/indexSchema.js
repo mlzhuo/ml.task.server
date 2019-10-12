@@ -12,8 +12,7 @@ const userSchema = new Schema({
   city: { type: String },
   province: { type: String },
   country: { type: String },
-  avatarUrl: { type: String },
-  isNewUser: { type: Boolean }
+  avatarUrl: { type: String }
 })
 
 const eventSchema = new Schema({
