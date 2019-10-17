@@ -9,6 +9,7 @@ const {
   countdownModel
 } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
+const { formatYMD } = require('../utils/index')
 const { AppID, AppSecret } = global.config
 
 const insertLog = ({ user_id, user_name, openid, type, description }) => {
@@ -294,13 +295,9 @@ module.exports = {
   addPunch: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
-    const state = 0
-    const punchHistory = {}
     const obj = {
       date,
-      state,
       edit_time,
-      punchHistory,
       ...req.body
     }
     const result = await punchModel.create(obj)
@@ -318,24 +315,49 @@ module.exports = {
     const {
       punch_id,
       today,
-      state,
       start_date,
       end_date,
       name,
       description
     } = req.body
     if (today) {
+      if (today !== formatYMD(new Date())) {
+        res.json(
+          ApiResponse({
+            state: true,
+            message: '注意打卡时间'
+          })
+        )
+        return
+      }
       const punch = await punchModel.findOne({ _id: punch_id })
+      const punchHistory = punch.punchHistory || {}
+      if (punchHistory.today) {
+        res.json(
+          ApiResponse({
+            state: true,
+            message: '已经打过卡了'
+          })
+        )
+        return
+      }
       const result = await punchModel.updateOne(
         { _id: punch_id },
         {
           punchHistory: {
-            ...punch.punchHistory,
+            ...punchHistory,
             [today]: new Date().toISOString()
           },
           edit_time
         }
       )
+      const punchDaysLen =
+        (new Date(punch.end_date).getTime() -
+          new Date(punch.start_date).getTime()) /
+        (24 * 3600 * 1000)
+      if (Object.keys(punchHistory).length === punchDaysLen) {
+        await punchModel.updateOne({ _id: punch_id }, { state: 1 })
+      }
       result &&
         res.json(
           ApiResponse({
@@ -346,7 +368,7 @@ module.exports = {
     } else {
       const result = await punchModel.updateOne(
         { _id: punch_id },
-        { state, start_date, end_date, name, description, edit_time }
+        { start_date, end_date, name, description, edit_time }
       )
       result &&
         res.json(

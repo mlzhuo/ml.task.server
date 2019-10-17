@@ -57,7 +57,7 @@ const punchSchema = new Schema({
   name: { type: String },
   description: { type: String },
   user_id: { type: String },
-  punchHistory: { type: Object }
+  punchHistory: { type: Object, default: {} }
 })
 
 const countdownSchema = new Schema({
