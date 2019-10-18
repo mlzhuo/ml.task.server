@@ -283,7 +283,7 @@ module.exports = {
   },
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
-    const result = await punchModel.find({ user_id })
+    const result = await punchModel.find({ user_id }).sort({ date: -1 })
     result &&
       res.json(
         ApiResponse({
@@ -320,8 +320,13 @@ module.exports = {
       name,
       description
     } = req.body
+    const punch = await punchModel.findOne({ _id: punch_id })
     if (today) {
-      if (today !== formatYMD(new Date())) {
+      if (
+        new Date(today).getTime() < new Date(punch.start_date) ||
+        new Date(today).getTime() > new Date(punch.end_date) ||
+        today !== formatYMD(new Date())
+      ) {
         res.json(
           ApiResponse({
             state: true,
@@ -330,9 +335,8 @@ module.exports = {
         )
         return
       }
-      const punch = await punchModel.findOne({ _id: punch_id })
       const punchHistory = punch.punchHistory || {}
-      if (punchHistory.today) {
+      if (punchHistory[today]) {
         res.json(
           ApiResponse({
             state: true,
