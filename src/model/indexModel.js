@@ -283,7 +283,10 @@ module.exports = {
   },
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
-    let result = await punchModel.find({ user_id }).sort({ state: 1, date: -1 })
+    const result = await punchModel
+      .find({ user_id })
+      .sort({ state: 1, date: -1 })
+    let data = []
     result.forEach(v => {
       v.allDays =
         (new Date(formatYMD(new Date(v.end_date))).getTime() -
@@ -310,12 +313,23 @@ module.exports = {
       v.end_date_format = formatYMD(new Date(v.end_date))
         .slice(5)
         .split('-')
+      data.push({
+        ...v,
+        allDays,
+        okDays,
+        noOkDays,
+        today,
+        start_date,
+        end_date,
+        start_date_format,
+        end_date_format
+      })
     })
-    result &&
+    data &&
       res.json(
         ApiResponse({
           state: true,
-          data: result
+          data
         })
       )
   },
