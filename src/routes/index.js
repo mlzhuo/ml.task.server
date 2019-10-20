@@ -17,6 +17,9 @@ router.post('/:user_id/events', (req, res) => {
 router.put('/:user_id/events', (req, res) => {
   indexModel.editEvents(req, res)
 })
+router.delete('/:user_id/events/:event_id', (req, res) => {
+  indexModel.delEvent(req, res)
+})
 router.get('/:user_id/events/:event_id', (req, res) => {
   indexModel.findEventByEventId(req, res)
 })
@@ -34,6 +37,9 @@ router.post('/:event_id/tasks', (req, res) => {
 })
 router.put('/:event_id/tasks', (req, res) => {
   indexModel.editTask(req, res)
+})
+router.delete('/:event_id/tasks/:task_id', (req, res) => {
+  indexModel.delTask(req, res)
 })
 router.get('/:event_id/tasks/:task_id', (req, res) => {
   indexModel.findTaskByTaskId(req, res)

@@ -21,7 +21,8 @@ const eventSchema = new Schema({
   date: { type: Date },
   edit_time: { type: Date },
   level: { type: Number, default: 0 },
-  user_id: { type: String }
+  user_id: { type: String },
+  delete: { type: Number }
 })
 
 const taskSchema = new Schema({
@@ -30,7 +31,8 @@ const taskSchema = new Schema({
   edit_time: { type: Date },
   state: { type: Number, default: 0 },
   level: { type: Number, default: 0 },
-  event_id: { type: String }
+  event_id: { type: String },
+  delete: { type: Number }
 })
 
 const logSchema = new Schema({

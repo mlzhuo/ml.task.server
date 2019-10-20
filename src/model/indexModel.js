@@ -118,7 +118,7 @@ module.exports = {
   findEventsByUserId: async (req, res) => {
     const { user_id } = req.params
     const result = await eventModel
-      .find({ user_id })
+      .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ level: -1, edit_time: -1, date: -1 })
     result &&
       res.json(
@@ -166,13 +166,30 @@ module.exports = {
         })
       )
   },
+  delEvent: async (req, res) => {
+    const { event_id } = req.params
+    const result = await eventModel.updateOne({ _id: event_id }, { delete: 1 })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '删除成功'
+        })
+      )
+  },
   eventStatistics: async (req, res) => {
     const { user_id } = req.params
-    const allEvents = await eventModel.find({ user_id })
+    const allEvents = await eventModel.find({
+      user_id,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
     let tasks = allEvents.map(async event => {
       return {
         event_id: event._id,
-        data: await taskModel.find({ event_id: event._id })
+        data: await taskModel.find({
+          event_id: event._id,
+          $or: [{ delete: { $exists: false } }, { delete: 0 }]
+        })
       }
     })
     let tasksResult = await Promise.all([...tasks])
@@ -202,7 +219,7 @@ module.exports = {
   findTasksByEventId: async (req, res) => {
     const { event_id } = req.params
     const result = await taskModel
-      .find({ event_id })
+      .find({ event_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ date: -1, state: -1, level: -1 })
     result &&
       res.json(
@@ -256,6 +273,17 @@ module.exports = {
         ApiResponse({
           state: true,
           message: '操作成功'
+        })
+      )
+  },
+  delTask: async (req, res) => {
+    const { task_id } = req.params
+    const result = await taskModel.updateOne({ _id: task_id }, { delete: 1 })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '删除成功'
         })
       )
   },
