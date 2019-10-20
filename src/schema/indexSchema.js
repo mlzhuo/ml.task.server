@@ -59,7 +59,8 @@ const punchSchema = new Schema({
   name: { type: String },
   description: { type: String },
   user_id: { type: String },
-  punchHistory: { type: Object, default: {} }
+  punchHistory: { type: Object, default: {} },
+  delete: { type: Number }
 })
 
 const countdownSchema = new Schema({
@@ -70,7 +71,8 @@ const countdownSchema = new Schema({
   end_date: { type: Date },
   name: { type: String },
   description: { type: String },
-  user_id: { type: String }
+  user_id: { type: String },
+  delete: { type: Number }
 })
 
 module.exports = {

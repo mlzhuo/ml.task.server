@@ -312,7 +312,7 @@ module.exports = {
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
     const result = await punchModel
-      .find({ user_id })
+      .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ state: 1, date: -1 })
     let data = []
     result.forEach(v => {
@@ -451,5 +451,16 @@ module.exports = {
           })
         )
     }
+  },
+  delPunch: async (req, res) => {
+    const { punch_id } = req.params
+    const result = await punchModel.updateOne({ _id: punch_id }, { delete: 1 })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '删除成功'
+        })
+      )
   }
 }

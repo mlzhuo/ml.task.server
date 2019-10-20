@@ -72,5 +72,8 @@ router.post('/:user_id/punch', (req, res) => {
 router.put('/:user_id/punch', (req, res) => {
   indexModel.editPunch(req, res)
 })
+router.delete('/:user_id/punch/:punch_id', (req, res) => {
+  indexModel.delPunch(req, res)
+})
 
 module.exports = router
