@@ -6,7 +6,8 @@ const {
   logModel,
   versionModel,
   punchModel,
-  countdownModel
+  countdownModel,
+  configModel
 } = require('../schema/indexSchema')
 const { ApiResponse } = require('../utils/apiUtils')
 const { formatYMD } = require('../utils/index')
@@ -460,6 +461,29 @@ module.exports = {
         ApiResponse({
           state: true,
           message: '删除成功'
+        })
+      )
+  },
+  getConfig: async (req, res) => {
+    const date = new Date(formatYMD(new Date()))
+    const result = await configModel.findOne({ date })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          data: result
+        })
+      )
+  },
+  addConfig: async (req, res) => {
+    const date = formatYMD(new Date(req.body.date))
+    const config = req.body.config
+    const result = await configModel.create({ date, config })
+    result &&
+      res.json(
+        ApiResponse({
+          state: true,
+          message: '操作成功'
         })
       )
   }

@@ -6,6 +6,15 @@ router.post('/login', (req, res) => {
   indexModel.login(req, res)
 })
 
+// config
+
+router.get('/config', (req, res) => {
+  indexModel.getConfig(req, res)
+})
+router.post('/config', (req, res) => {
+  indexModel.addConfig(req, res)
+})
+
 // event
 
 router.get('/:user_id/events', (req, res) => {

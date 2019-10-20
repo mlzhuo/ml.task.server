@@ -75,6 +75,11 @@ const countdownSchema = new Schema({
   delete: { type: Number }
 })
 
+const configSchema = new Schema({
+  date: { type: Date },
+  config: { type: Object }
+})
+
 module.exports = {
   userModel: mongoose.model('User', userSchema),
   eventModel: mongoose.model('Event', eventSchema),
@@ -82,5 +87,6 @@ module.exports = {
   logModel: mongoose.model('Log', logSchema),
   versionModel: mongoose.model('Version', versionSchema),
   punchModel: mongoose.model('Punch', punchSchema),
-  countdownModel: mongoose.model('Countdown', countdownSchema)
+  countdownModel: mongoose.model('Countdown', countdownSchema),
+  configModel: mongoose.model('Config', configSchema)
 }
