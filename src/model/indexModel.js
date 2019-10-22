@@ -9,7 +9,7 @@ const {
   countdownModel,
   configModel
 } = require('../schema/indexSchema')
-const { ApiResponse } = require('../utils/apiUtils')
+const { responseData } = require('../utils/apiUtils')
 const { formatYMD } = require('../utils/index')
 const { AppID, AppSecret } = global.config
 
@@ -65,13 +65,12 @@ module.exports = {
                     description: err
                   })
                 const { _id, openid } = doc
-                res.json(
-                  ApiResponse({
-                    state: true,
-                    data: { _id, openid },
-                    message: '登录成功'
-                  })
-                )
+                responseData({
+                  res,
+                  result: true,
+                  data: { _id, openid },
+                  message: '登录成功'
+                })
               }
             )
           } else {
@@ -97,13 +96,12 @@ module.exports = {
                     description: err
                   })
                 const { _id, openid } = doc
-                res.json(
-                  ApiResponse({
-                    state: true,
-                    data: { _id, openid },
-                    message: '登录成功'
-                  })
-                )
+                responseData({
+                  res,
+                  result: true,
+                  data: { _id, openid },
+                  message: '登录成功'
+                })
               }
             )
           }
@@ -121,37 +119,18 @@ module.exports = {
     const result = await eventModel
       .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ level: -1, edit_time: -1, date: -1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   findEventByEventId: async (req, res) => {
     const { user_id, event_id } = req.params
     const result = await eventModel.findOne({ user_id, _id: event_id })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   addEvents: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
     const result = await eventModel.create({ ...req.body, date, edit_time })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result,
-          message: '添加成功'
-        })
-      )
+    responseData({ res, result, data: result, message: '添加成功' })
   },
   editEvents: async (req, res) => {
     const edit_time = new Date().toISOString()
@@ -159,24 +138,12 @@ module.exports = {
     const doc = title ? { title, description, level, edit_time } : { edit_time }
     const _id = global.ObjectId(event_id)
     const result = await eventModel.updateOne({ _id }, doc)
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '操作成功'
-        })
-      )
+    responseData({ res, result, message: '操作成功' })
   },
   delEvent: async (req, res) => {
     const { event_id } = req.params
     const result = await eventModel.updateOne({ _id: event_id }, { delete: 1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '删除成功'
-        })
-      )
+    responseData({ res, result, message: '删除成功' })
   },
   eventStatistics: async (req, res) => {
     const { user_id } = req.params
@@ -210,36 +177,19 @@ module.exports = {
         }
       }
     })
-    res.json(
-      ApiResponse({
-        state: true,
-        data: tasksStatisticObj
-      })
-    )
+    responseData({ res, result: tasksStatisticObj, data: tasksStatisticObj })
   },
   findTasksByEventId: async (req, res) => {
     const { event_id } = req.params
     const result = await taskModel
       .find({ event_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ date: -1, state: -1, level: -1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   findTaskByTaskId: async (req, res) => {
     const { task_id } = req.params
     const result = await taskModel.findOne({ _id: task_id })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   addTask: async (req, res) => {
     const date = new Date().toISOString()
@@ -253,14 +203,7 @@ module.exports = {
       edit_time
     })
     await eventModel.updateOne({ _id: event_id }, { edit_time })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result,
-          message: '添加成功'
-        })
-      )
+    responseData({ res, result, data: result, message: '添加成功' })
   },
   editTask: async (req, res) => {
     const edit_time = new Date().toISOString()
@@ -269,46 +212,21 @@ module.exports = {
     const doc = state ? { state, edit_time } : { edit_time, content, level }
     const result = await taskModel.updateOne({ _id }, doc)
     await eventModel.updateOne({ _id: event_id }, { edit_time })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '操作成功'
-        })
-      )
+    responseData({ res, result, message: '操作成功' })
   },
   delTask: async (req, res) => {
     const { task_id } = req.params
     const result = await taskModel.updateOne({ _id: task_id }, { delete: 1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '删除成功'
-        })
-      )
+    responseData({ res, result, message: '删除成功' })
   },
   findAllVersion: async (req, res) => {
     const result = await versionModel.find({}).sort({ date: -1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   releaseNewVersion: async (req, res) => {
     const date = new Date().toISOString()
     const result = await versionModel.create({ ...req.body, date })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result,
-          message: '发布成功'
-        })
-      )
+    responseData({ res, result, data: result, message: '发布成功' })
   },
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
@@ -354,13 +272,7 @@ module.exports = {
         end_date_format
       })
     })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data
-        })
-      )
+    responseData({ res, result, data })
   },
   addPunch: async (req, res) => {
     const date = new Date().toISOString()
@@ -371,14 +283,7 @@ module.exports = {
       ...req.body
     }
     const result = await punchModel.create(obj)
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result,
-          message: '添加成功'
-        })
-      )
+    responseData({ res, result, data: result, message: '添加成功' })
   },
   editPunch: async (req, res) => {
     const edit_time = new Date().toISOString()
@@ -397,22 +302,12 @@ module.exports = {
         new Date(today).getTime() > new Date(punch.end_date) ||
         today !== formatYMD(new Date())
       ) {
-        res.json(
-          ApiResponse({
-            state: true,
-            message: '注意打卡时间'
-          })
-        )
+        responseData({ res, result: true, message: '注意打卡时间' })
         return
       }
       const punchHistory = punch.punchHistory || {}
       if (punchHistory[today]) {
-        res.json(
-          ApiResponse({
-            state: true,
-            message: '已经打过卡了'
-          })
-        )
+        responseData({ res, result: true, message: '已经打过卡了' })
         return
       }
       const result = await punchModel.updateOne(
@@ -432,59 +327,29 @@ module.exports = {
       if (Object.keys(punchHistory).length === punchDaysLen) {
         await punchModel.updateOne({ _id: punch_id }, { state: 1 })
       }
-      result &&
-        res.json(
-          ApiResponse({
-            state: true,
-            message: '打卡成功'
-          })
-        )
+      responseData({ res, result, message: '打卡成功' })
     } else {
       const result = await punchModel.updateOne(
         { _id: punch_id },
         { start_date, end_date, name, description, edit_time }
       )
-      result &&
-        res.json(
-          ApiResponse({
-            state: true,
-            message: '编辑成功'
-          })
-        )
+      responseData({ res, result, message: '编辑成功' })
     }
   },
   delPunch: async (req, res) => {
     const { punch_id } = req.params
     const result = await punchModel.updateOne({ _id: punch_id }, { delete: 1 })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '删除成功'
-        })
-      )
+    responseData({ res, result, message: '删除成功' })
   },
   getConfig: async (req, res) => {
     const date = new Date(formatYMD(new Date()))
     const result = await configModel.findOne({ date })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          data: result
-        })
-      )
+    responseData({ res, result, data: result })
   },
   addConfig: async (req, res) => {
     const date = formatYMD(new Date(req.body.date))
     const config = req.body.config
     const result = await configModel.create({ date, config })
-    result &&
-      res.json(
-        ApiResponse({
-          state: true,
-          message: '操作成功'
-        })
-      )
+    responseData({ res, result, message: '操作成功' })
   }
 }
