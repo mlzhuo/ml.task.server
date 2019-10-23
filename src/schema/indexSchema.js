@@ -47,7 +47,9 @@ const logSchema = new Schema({
 const versionSchema = new Schema({
   version: { type: String },
   description: { type: String },
-  date: { type: Date }
+  date: { type: Date },
+  edit_time: { type: Date },
+  delete: { type: Number }
 })
 
 const punchSchema = new Schema({
@@ -77,6 +79,7 @@ const countdownSchema = new Schema({
 
 const configSchema = new Schema({
   date: { type: Date },
+  description: { type: String },
   config: { type: Object }
 })
 

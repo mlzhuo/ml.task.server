@@ -27,6 +27,7 @@ const insertLog = ({ user_id, user_name, openid, type, description }) => {
 
 module.exports = {
   insertLog,
+  // login
   login: async (req, res) => {
     const { code } = req.body
     request(
@@ -55,6 +56,7 @@ module.exports = {
             userModel.findOneAndUpdate(
               { openid },
               { ...req.body, last_date, formId: formIds },
+              { new: true },
               (err, doc) => {
                 flag &&
                   insertLog({
@@ -114,7 +116,9 @@ module.exports = {
       }
     )
   },
-  findEventsByUserId: async (req, res) => {
+
+  // event
+  findAllEventsByUserId: async (req, res) => {
     const { user_id } = req.params
     const result = await eventModel
       .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
@@ -135,10 +139,11 @@ module.exports = {
   editEvents: async (req, res) => {
     const edit_time = new Date().toISOString()
     const { event_id, title, description, level } = req.body
-    const doc = title ? { title, description, level, edit_time } : { edit_time }
-    const _id = global.ObjectId(event_id)
-    const result = await eventModel.updateOne({ _id }, doc)
-    responseData({ res, result, message: '操作成功' })
+    const doc = { title, description, level, edit_time }
+    const result = await eventModel.findOneAndUpdate({ _id: event_id }, doc, {
+      new: true
+    })
+    responseData({ res, result, data: result, message: '操作成功' })
   },
   delEvent: async (req, res) => {
     const { event_id } = req.params
@@ -179,7 +184,9 @@ module.exports = {
     })
     responseData({ res, result: tasksStatisticObj, data: tasksStatisticObj })
   },
-  findTasksByEventId: async (req, res) => {
+
+  // task
+  findAllTasksByEventId: async (req, res) => {
     const { event_id } = req.params
     const result = await taskModel
       .find({ event_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
@@ -208,19 +215,24 @@ module.exports = {
   editTask: async (req, res) => {
     const edit_time = new Date().toISOString()
     const { state, task_id, content, level, event_id } = req.body
-    const _id = global.ObjectId(task_id)
-    const doc = state ? { state, edit_time } : { edit_time, content, level }
-    const result = await taskModel.updateOne({ _id }, doc)
+    const doc = state ? { state: 1, edit_time } : { edit_time, content, level }
+    const result = await taskModel.findOneAndUpdate({ _id: task_id }, doc, {
+      new: true
+    })
     await eventModel.updateOne({ _id: event_id }, { edit_time })
-    responseData({ res, result, message: '操作成功' })
+    responseData({ res, result, data: result, message: '操作成功' })
   },
   delTask: async (req, res) => {
     const { task_id } = req.params
     const result = await taskModel.updateOne({ _id: task_id }, { delete: 1 })
     responseData({ res, result, message: '删除成功' })
   },
+
+  // version
   findAllVersion: async (req, res) => {
-    const result = await versionModel.find({}).sort({ date: -1 })
+    const result = await versionModel
+      .find({ $or: [{ delete: { $exists: false } }, { delete: 0 }] })
+      .sort({ date: -1 })
     responseData({ res, result, data: result })
   },
   releaseNewVersion: async (req, res) => {
@@ -228,6 +240,47 @@ module.exports = {
     const result = await versionModel.create({ ...req.body, date })
     responseData({ res, result, data: result, message: '发布成功' })
   },
+  editVersion: async (req, res) => {
+    const edit_time = new Date().toISOString()
+    const { version_id, version, newVersion, description } = req.body
+    let obj = version_id ? { _id: version_id } : { version }
+    let doc = { edit_time }
+    if (newVersion) {
+      doc.version = newVersion
+    }
+    if (description) {
+      doc.description = description
+    }
+    const result = await versionModel.findOneAndUpdate(
+      { ...obj },
+      { ...doc },
+      { new: true }
+    )
+    responseData({ res, result, data: result, message: '编辑成功' })
+  },
+  findVersion: async (req, res) => {
+    const { version_info } = req.params
+    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
+    let obj = reg.test(version_info)
+      ? { _id: version_info }
+      : { version: version_info }
+    const result = await versionModel.findOne({
+      ...obj,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    responseData({ res, result, data: result })
+  },
+  delVersion: async (req, res) => {
+    const { version_info } = req.params
+    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
+    let obj = reg.test(version_info)
+      ? { _id: version_info }
+      : { version: version_info }
+    const result = await versionModel.updateOne({ ...obj }, { delete: 1 })
+    responseData({ res, result, message: '删除成功' })
+  },
+
+  // punch
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
     const result = await punchModel
@@ -310,7 +363,7 @@ module.exports = {
         responseData({ res, result: true, message: '已经打过卡了' })
         return
       }
-      const result = await punchModel.updateOne(
+      const result = await punchModel.findOneAndUpdate(
         { _id: punch_id },
         {
           punchHistory: {
@@ -318,7 +371,8 @@ module.exports = {
             [today]: new Date().toISOString()
           },
           edit_time
-        }
+        },
+        { new: true }
       )
       const punchDaysLen =
         (new Date(punch.end_date).getTime() -
@@ -327,13 +381,14 @@ module.exports = {
       if (Object.keys(punchHistory).length === punchDaysLen) {
         await punchModel.updateOne({ _id: punch_id }, { state: 1 })
       }
-      responseData({ res, result, message: '打卡成功' })
+      responseData({ res, result, data: result, message: '打卡成功' })
     } else {
-      const result = await punchModel.updateOne(
+      const result = await punchModel.findOneAndUpdate(
         { _id: punch_id },
-        { start_date, end_date, name, description, edit_time }
+        { start_date, end_date, name, description, edit_time },
+        { new: true }
       )
-      responseData({ res, result, message: '编辑成功' })
+      responseData({ res, result, data: result, message: '编辑成功' })
     }
   },
   delPunch: async (req, res) => {
@@ -341,15 +396,29 @@ module.exports = {
     const result = await punchModel.updateOne({ _id: punch_id }, { delete: 1 })
     responseData({ res, result, message: '删除成功' })
   },
-  getConfig: async (req, res) => {
+  findPunchById: async (req, res) => {
+    const { punch_id } = req.params
+    const result = await punchModel.findOne({
+      _id: punch_id,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    responseData({ res, result, data: result })
+  },
+
+  // colorful eggs
+  getColorfulEggs: async (req, res) => {
     const date = new Date(formatYMD(new Date()))
     const result = await configModel.findOne({ date })
     responseData({ res, result, data: result })
   },
-  addConfig: async (req, res) => {
-    const date = formatYMD(new Date(req.body.date))
-    const config = req.body.config
-    const result = await configModel.create({ date, config })
-    responseData({ res, result, message: '操作成功' })
+  addColorfulEggs: async (req, res) => {
+    const { date, config, description } = req.body
+    const dateFormat = formatYMD(new Date(date))
+    const result = await configModel.create({
+      date: dateFormat,
+      config,
+      description
+    })
+    responseData({ res, result, data: result, message: '操作成功' })
   }
 }

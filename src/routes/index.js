@@ -2,23 +2,45 @@ const express = require('express')
 const router = express.Router()
 const indexModel = require('../model/indexModel')
 const { checkSignature } = require('../utils/wxUtils')
+
+// login
 router.post('/login', (req, res) => {
   indexModel.login(req, res)
 })
 
-// config
+// version
+router.get('/version', (req, res) => {
+  indexModel.findAllVersion(req, res)
+})
+router.post('/version', (req, res) => {
+  indexModel.releaseNewVersion(req, res)
+})
+router.put('/version', (req, res) => {
+  indexModel.editVersion(req, res)
+})
+router.delete('/version/:version_info', (req, res) => {
+  indexModel.delVersion(req, res)
+})
+router.get('/version/:version_info', (req, res) => {
+  indexModel.findVersion(req, res)
+})
 
+// wx push
+router.get('/wxmessage', (req, res) => {
+  checkSignature(req, res)
+})
+
+// colorful eggs
 router.get('/config', (req, res) => {
-  indexModel.getConfig(req, res)
+  indexModel.getColorfulEggs(req, res)
 })
 router.post('/config', (req, res) => {
-  indexModel.addConfig(req, res)
+  indexModel.addColorfulEggs(req, res)
 })
 
 // event
-
 router.get('/:user_id/events', (req, res) => {
-  indexModel.findEventsByUserId(req, res)
+  indexModel.findAllEventsByUserId(req, res)
 })
 router.post('/:user_id/events', (req, res) => {
   indexModel.addEvents(req, res)
@@ -37,9 +59,8 @@ router.get('/:user_id/statistics', (req, res) => {
 })
 
 // task
-
 router.get('/:event_id/tasks', (req, res) => {
-  indexModel.findTasksByEventId(req, res)
+  indexModel.findAllTasksByEventId(req, res)
 })
 router.post('/:event_id/tasks', (req, res) => {
   indexModel.addTask(req, res)
@@ -54,24 +75,7 @@ router.get('/:event_id/tasks/:task_id', (req, res) => {
   indexModel.findTaskByTaskId(req, res)
 })
 
-// wx push
-
-router.get('/wxmessage', (req, res) => {
-  checkSignature(req, res)
-})
-
-// version
-
-router.get('/version', (req, res) => {
-  indexModel.findAllVersion(req, res)
-})
-
-router.post('/version', (req, res) => {
-  indexModel.releaseNewVersion(req, res)
-})
-
 // punch
-
 router.get('/:user_id/punch', (req, res) => {
   indexModel.findAllPunch(req, res)
 })
@@ -83,6 +87,9 @@ router.put('/:user_id/punch', (req, res) => {
 })
 router.delete('/:user_id/punch/:punch_id', (req, res) => {
   indexModel.delPunch(req, res)
+})
+router.get('/:user_id/punch/:punch_id', (req, res) => {
+  indexModel.findPunchById(req, res)
 })
 
 module.exports = router
