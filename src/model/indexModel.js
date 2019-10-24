@@ -288,31 +288,25 @@ module.exports = {
       .sort({ state: 1, date: -1 })
     let data = []
     result.forEach(v => {
+      const start_date = formatYMD(new Date(v.start_date))
+      const end_date = formatYMD(new Date(v.end_date))
       const allDays =
-        (new Date(formatYMD(new Date(v.end_date))).getTime() -
-          new Date(formatYMD(new Date(v.start_date))).getTime()) /
+        (new Date(end_date).getTime() - new Date(start_date).getTime()) /
           (24 * 3600 * 1000) +
         1
       const okDays = v.punchHistory ? Object.keys(v.punchHistory).length : 0
       let noOkDays =
         (new Date(formatYMD(new Date())).getTime() -
-          new Date(formatYMD(new Date(v.start_date))).getTime()) /
+          new Date(start_date).getTime()) /
           (24 * 3600 * 1000) -
-        v.okDays
+        okDays +
+        1
       noOkDays = noOkDays <= 0 ? 0 : noOkDays
       const today = v.punchHistory
         ? Object.keys(v.punchHistory).indexOf(formatYMD(new Date())) !== -1
           ? true
           : false
         : false
-      const start_date = formatYMD(new Date(v.start_date))
-      const end_date = formatYMD(new Date(v.end_date))
-      const start_date_format = formatYMD(new Date(v.start_date))
-        .slice(5)
-        .split('-')
-      const end_date_format = formatYMD(new Date(v.end_date))
-        .slice(5)
-        .split('-')
       data.push({
         ...v._doc,
         allDays,
@@ -320,9 +314,7 @@ module.exports = {
         noOkDays,
         today,
         start_date,
-        end_date,
-        start_date_format,
-        end_date_format
+        end_date
       })
     })
     responseData({ res, result, data })
