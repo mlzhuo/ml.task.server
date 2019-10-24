@@ -1,7 +1,7 @@
 var mongoose = require('mongoose')
 const { host, port, user, pwd, dbName } = global.config.mongodb
 const dbUrl = `mongodb://${user}:${pwd}@${host}:${port}/${dbName}`
-mongoose.connect(dbUrl, { useNewUrlParser: true })
+mongoose.connect(dbUrl, { useNewUrlParser: true, useFindAndModify: false })
 mongoose.Promise = global.Promise
 global.ObjectId = mongoose.Types.ObjectId
 const db = mongoose.connection
