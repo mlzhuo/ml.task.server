@@ -102,14 +102,18 @@ const sendMessage = async (touser, form_id, kValue1, kValue2, callback) => {
 
 const getEvents = async user_id => {
   return await eventModel
-    .find({
-      user_id
-    })
-    .sort({ date: -1 })
+    .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
+    .sort({ level: -1, edit_time: -1, date: -1 })
 }
 
 const getTasks = async event_id => {
-  return await taskModel.find({ event_id, state: 0 }).sort({ date: -1 })
+  return await taskModel
+    .find({
+      event_id,
+      state: 0,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    .sort({ date: -1, level: -1 })
 }
 
 const sendMessageEachDay = async () => {
