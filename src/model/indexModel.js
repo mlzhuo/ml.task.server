@@ -288,6 +288,7 @@ module.exports = {
       .sort({ state: 1, date: -1 })
     let data = []
     result.forEach(v => {
+      const currentDate = formatYMD(new Date())
       const start_date = formatYMD(new Date(v.start_date))
       const end_date = formatYMD(new Date(v.end_date))
       const allDays =
@@ -295,15 +296,18 @@ module.exports = {
           (24 * 3600 * 1000) +
         1
       const okDays = v.punchHistory ? Object.keys(v.punchHistory).length : 0
+      const calcEndDate =
+        new Date(end_date).getTime() > new Date(currentDate).getTime()
+          ? currentDate
+          : end_date
       let noOkDays =
-        (new Date(formatYMD(new Date())).getTime() -
-          new Date(start_date).getTime()) /
+        (new Date(calcEndDate).getTime() - new Date(start_date).getTime()) /
           (24 * 3600 * 1000) -
         okDays +
         1
       noOkDays = noOkDays <= 0 ? 0 : noOkDays
       const today = v.punchHistory
-        ? Object.keys(v.punchHistory).indexOf(formatYMD(new Date())) !== -1
+        ? Object.keys(v.punchHistory).indexOf(currentDate) !== -1
           ? true
           : false
         : false
