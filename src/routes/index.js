@@ -92,4 +92,21 @@ router.get('/:user_id/punch/:punch_id', (req, res) => {
   indexModel.findPunchById(req, res)
 })
 
+// countdown
+router.get('/:user_id/countdown', (req, res) => {
+  indexModel.findAllCountdown(req, res)
+})
+router.post('/:user_id/countdown', (req, res) => {
+  indexModel.addCountdown(req, res)
+})
+router.put('/:user_id/countdown', (req, res) => {
+  indexModel.editCountdown(req, res)
+})
+router.delete('/:user_id/countdown/:countdown_id', (req, res) => {
+  indexModel.delCountdown(req, res)
+})
+router.get('/:user_id/countdown/:countdown_id', (req, res) => {
+  indexModel.findCountdownById(req, res)
+})
+
 module.exports = router

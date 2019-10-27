@@ -27,6 +27,7 @@ const insertLog = ({ user_id, user_name, openid, type, description }) => {
 
 module.exports = {
   insertLog,
+  
   // login
   login: async (req, res) => {
     const { code } = req.body
@@ -115,6 +116,75 @@ module.exports = {
         }
       }
     )
+  },
+
+  // version
+  findAllVersion: async (req, res) => {
+    const result = await versionModel
+      .find({ $or: [{ delete: { $exists: false } }, { delete: 0 }] })
+      .sort({ date: -1 })
+    responseData({ res, result, data: result })
+  },
+  releaseNewVersion: async (req, res) => {
+    const date = new Date().toISOString()
+    const result = await versionModel.create({ ...req.body, date })
+    responseData({ res, result, data: result, message: '发布成功' })
+  },
+  editVersion: async (req, res) => {
+    const edit_time = new Date().toISOString()
+    const { version_id, version, newVersion, description } = req.body
+    let obj = version_id ? { _id: version_id } : { version }
+    let doc = { edit_time }
+    if (newVersion) {
+      doc.version = newVersion
+    }
+    if (description) {
+      doc.description = description
+    }
+    const result = await versionModel.findOneAndUpdate(
+      { ...obj },
+      { ...doc },
+      { new: true }
+    )
+    responseData({ res, result, data: result, message: '编辑成功' })
+  },
+  findVersion: async (req, res) => {
+    const { version_info } = req.params
+    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
+    let obj = reg.test(version_info)
+      ? { _id: version_info }
+      : { version: version_info }
+    const result = await versionModel.findOne({
+      ...obj,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    responseData({ res, result, data: result })
+  },
+  delVersion: async (req, res) => {
+    const { version_info } = req.params
+    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
+    let obj = reg.test(version_info)
+      ? { _id: version_info }
+      : { version: version_info }
+    const result = await versionModel.updateOne({ ...obj }, { delete: 1 })
+    responseData({ res, result, message: '删除成功' })
+  },
+
+  // colorful eggs
+  getColorfulEggs: async (req, res) => {
+    const date = new Date(formatYMD(new Date()))
+    const result = await configModel.findOne({ date })
+    responseData({ res, result, data: result })
+  },
+  addColorfulEggs: async (req, res) => {
+    const { date, config, description } = req.body
+    const dateFormat = formatYMD(new Date(date))
+    const result = await configModel.create({
+      date: dateFormat,
+      config,
+      description
+    })
+    responseData({ res, result, data: result, message: '操作成功' })
   },
 
   // event
@@ -228,58 +298,6 @@ module.exports = {
     responseData({ res, result, message: '删除成功' })
   },
 
-  // version
-  findAllVersion: async (req, res) => {
-    const result = await versionModel
-      .find({ $or: [{ delete: { $exists: false } }, { delete: 0 }] })
-      .sort({ date: -1 })
-    responseData({ res, result, data: result })
-  },
-  releaseNewVersion: async (req, res) => {
-    const date = new Date().toISOString()
-    const result = await versionModel.create({ ...req.body, date })
-    responseData({ res, result, data: result, message: '发布成功' })
-  },
-  editVersion: async (req, res) => {
-    const edit_time = new Date().toISOString()
-    const { version_id, version, newVersion, description } = req.body
-    let obj = version_id ? { _id: version_id } : { version }
-    let doc = { edit_time }
-    if (newVersion) {
-      doc.version = newVersion
-    }
-    if (description) {
-      doc.description = description
-    }
-    const result = await versionModel.findOneAndUpdate(
-      { ...obj },
-      { ...doc },
-      { new: true }
-    )
-    responseData({ res, result, data: result, message: '编辑成功' })
-  },
-  findVersion: async (req, res) => {
-    const { version_info } = req.params
-    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
-    let obj = reg.test(version_info)
-      ? { _id: version_info }
-      : { version: version_info }
-    const result = await versionModel.findOne({
-      ...obj,
-      $or: [{ delete: { $exists: false } }, { delete: 0 }]
-    })
-    responseData({ res, result, data: result })
-  },
-  delVersion: async (req, res) => {
-    const { version_info } = req.params
-    const reg = new RegExp(/^[a-zA-Z0-9]{24}$/)
-    let obj = reg.test(version_info)
-      ? { _id: version_info }
-      : { version: version_info }
-    const result = await versionModel.updateOne({ ...obj }, { delete: 1 })
-    responseData({ res, result, message: '删除成功' })
-  },
-
   // punch
   findAllPunch: async (req, res) => {
     const { user_id } = req.params
@@ -311,6 +329,9 @@ module.exports = {
           ? true
           : false
         : false
+      if (currentDate === start_date && !today) {
+        noOkDays = 0
+      }
       data.push({
         ...v._doc,
         allDays,
@@ -401,20 +422,50 @@ module.exports = {
     responseData({ res, result, data: result })
   },
 
-  // colorful eggs
-  getColorfulEggs: async (req, res) => {
-    const date = new Date(formatYMD(new Date()))
-    const result = await configModel.findOne({ date })
+  // countdown
+  findAllCountdown: async (req, res) => {
+    const { user_id } = req.params
+    const result = await countdownModel
+      .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
+      .sort({ date: -1 })
     responseData({ res, result, data: result })
   },
-  addColorfulEggs: async (req, res) => {
-    const { date, config, description } = req.body
-    const dateFormat = formatYMD(new Date(date))
-    const result = await configModel.create({
-      date: dateFormat,
-      config,
-      description
+  addCountdown: async (req, res) => {
+    const date = new Date().toISOString()
+    const result = await countdownModel.create({
+      ...req.body,
+      date,
+      edit_time: date
     })
-    responseData({ res, result, data: result, message: '操作成功' })
+    responseData({ res, result, data: result, message: '添加成功' })
+  },
+  editCountdown: async (req, res) => {
+    const edit_time = new Date().toISOString()
+    const { countdown_id, target_date, name, description } = req.body
+    let state = 0
+    if (new Date(target_date).getTime() <= new Date().getTime()) {
+      state = 1
+    }
+    const result = await countdownModel.findOneAndUpdate(
+      { _id: countdown_id },
+      { target_date, name, description, edit_time, state }
+    )
+    responseData({ res, result, data: result, message: '编辑成功' })
+  },
+  delCountdown: async (req, res) => {
+    const { countdown_id } = req.params
+    const result = await countdownModel.updateOne(
+      { _id: countdown_id },
+      { delete: 1 }
+    )
+    responseData({ res, result, message: '删除成功' })
+  },
+  findCountdownById: async (req, res) => {
+    const { countdown_id } = req.params
+    const result = await countdownModel.findOne({
+      _id: countdown_id,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    responseData({ res, result, data: result })
   }
 }
