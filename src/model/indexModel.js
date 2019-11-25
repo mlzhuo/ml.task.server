@@ -353,8 +353,8 @@ module.exports = {
     const obj = {
       date,
       edit_time,
-      start_date: new Date(start_date).toISOString(),
-      end_date: new Date(end_date).toISOString(),
+      start_date: new Date(start_date + ' 00:00:00').toISOString(),
+      end_date: new Date(end_date + ' 23:59:59').toISOString(),
       ...req.body
     }
     const result = await punchModel.create(obj)
@@ -385,29 +385,37 @@ module.exports = {
         responseData({ res, result: true, message: '已经打过卡了' })
         return
       }
+      const newPunchHistory = {
+        ...punchHistory,
+        [today]: new Date().toISOString()
+      }
       const result = await punchModel.findOneAndUpdate(
         { _id: punch_id },
         {
-          punchHistory: {
-            ...punchHistory,
-            [today]: new Date().toISOString()
-          },
+          punchHistory: newPunchHistory,
           edit_time
         },
         { new: true }
       )
       const punchDaysLen =
-        (new Date(punch.end_date).getTime() -
+        (new Date(punch.end_date).getTime() +
+          1000 -
           new Date(punch.start_date).getTime()) /
         (24 * 3600 * 1000)
-      if (Object.keys(punchHistory).length === punchDaysLen) {
+      if (Object.keys(newPunchHistory).length === punchDaysLen) {
         await punchModel.updateOne({ _id: punch_id }, { state: 1 })
       }
       responseData({ res, result, data: result, message: '打卡成功' })
     } else {
       const result = await punchModel.findOneAndUpdate(
         { _id: punch_id },
-        { start_date, end_date, name, description, edit_time },
+        {
+          start_date: new Date(start_date + ' 00:00:00').toISOString(),
+          end_date: new Date(end_date + ' 23:59:59').toISOString(),
+          name,
+          description,
+          edit_time
+        },
         { new: true }
       )
       responseData({ res, result, data: result, message: '编辑成功' })
@@ -472,5 +480,38 @@ module.exports = {
       $or: [{ delete: { $exists: false } }, { delete: 0 }]
     })
     responseData({ res, result, data: result })
+  },
+
+  // tools data overview
+  toolsDataOverview: async (req, res) => {
+    const { user_id } = req.params
+    const punchIsActive = await punchModel.find({
+      user_id,
+      state: 0,
+      $or: [{ delete: { $exists: false } }, { delete: 0 }]
+    })
+    const today = formatYMD(new Date())
+    let isPunch = 0
+    punchIsActive.forEach(v => {
+      const { punchHistory } = v
+      if (
+        new Date().getTime() >= new Date(v.start_date).getTime() &&
+        new Date().getTime() <= new Date(v.end_date).getTime() &&
+        punchHistory[today]
+      ) {
+        isPunch++
+      }
+    })
+    const punchObj = {
+      isActive: punchIsActive.length,
+      toadyIsDone: isPunch
+    }
+    responseData({
+      res,
+      result: 1,
+      data: {
+        punch: punchObj
+      }
+    })
   }
 }
