@@ -27,7 +27,7 @@ const insertLog = ({ user_id, user_name, openid, type, description }) => {
 
 module.exports = {
   insertLog,
-  
+
   // login
   login: async (req, res) => {
     const { code } = req.body
@@ -347,9 +347,14 @@ module.exports = {
   addPunch: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
+    const { start_date, end_date } = req.body
+    delete req.body.start_date
+    delete req.body.end_date
     const obj = {
       date,
       edit_time,
+      start_date: new Date(start_date).toISOString(),
+      end_date: new Date(end_date).toISOString(),
       ...req.body
     }
     const result = await punchModel.create(obj)
@@ -368,8 +373,8 @@ module.exports = {
     const punch = await punchModel.findOne({ _id: punch_id })
     if (today) {
       if (
-        new Date(today).getTime() < new Date(punch.start_date) ||
-        new Date(today).getTime() > new Date(punch.end_date) ||
+        new Date(today).getTime() < new Date(punch.start_date).getTime() ||
+        new Date(today).getTime() > new Date(punch.end_date).getTime() ||
         today !== formatYMD(new Date())
       ) {
         responseData({ res, result: true, message: '注意打卡时间' })
