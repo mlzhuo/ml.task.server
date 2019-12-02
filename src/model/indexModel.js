@@ -101,10 +101,12 @@ module.exports = {
 
   // version
   findAllVersion: async (req, res) => {
+    const { limit } = req.query
     const result = await versionModel
       .find({ $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ date: -1 })
-    responseData({ res, result, data: result })
+    const data = limit ? result.slice(0, limit) : result
+    responseData({ res, result, data })
   },
   releaseNewVersion: async (req, res) => {
     const date = new Date().toISOString()
