@@ -31,6 +31,7 @@ module.exports = {
   // login
   login: async (req, res) => {
     const { code } = req.body
+    const { priTmplId } = global.config
     request(
       `https://api.weixin.qq.com/sns/jscode2session?appid=${AppID}&secret=${AppSecret}&js_code=${code}&grant_type=authorization_code`,
       async (error, response, body) => {
@@ -39,70 +40,50 @@ module.exports = {
           delete req.body.code
           const last_date = new Date().toISOString()
           const user = await userModel.findOne({ openid })
-          const devToolFormId = 'the formId is a mock one'
-          const formIdFromResBody = req.body.formId
-          const flag = formIdFromResBody !== devToolFormId
           if (user) {
-            let formIds
-            if (user.formId) {
-              let formIdFromUser = user.formId.split(',')
-              flag && formIdFromUser.push(formIdFromResBody)
-              formIds = formIdFromUser.slice(-7).join(',')
-            } else {
-              if (flag) {
-                formIds = formIdFromResBody
-              }
-            }
-            delete req.body.formId
             userModel.findOneAndUpdate(
               { openid },
-              { ...req.body, last_date, formId: formIds },
+              { ...req.body, last_date },
               { new: true },
               (err, doc) => {
-                flag &&
-                  insertLog({
-                    user_id: doc._id,
-                    user_name: doc.nickName,
-                    openid: doc.openid,
-                    type: 'login',
-                    description: err
-                  })
+                insertLog({
+                  user_id: doc._id,
+                  user_name: doc.nickName,
+                  openid: doc.openid,
+                  type: 'login',
+                  description: err
+                })
                 const { _id, openid } = doc
                 responseData({
                   res,
                   result: true,
-                  data: { _id, openid },
+                  data: { _id, openid, priTmplId },
                   message: '登录成功'
                 })
               }
             )
           } else {
-            if (!flag) {
-              delete req.body.formId
-            }
             userModel.findOneAndUpdate(
               { openid },
               {
                 ...req.body,
-                formId: '',
                 date: last_date,
                 last_date
               },
               { new: true, upsert: true },
               (err, doc) => {
-                flag &&
-                  insertLog({
-                    user_id: doc._id,
-                    user_name: doc.nickName,
-                    openid: doc.openid,
-                    type: 'login',
-                    description: err
-                  })
+                insertLog({
+                  user_id: doc._id,
+                  user_name: doc.nickName,
+                  openid: doc.openid,
+                  type: 'login',
+                  description: err
+                })
                 const { _id, openid } = doc
                 responseData({
                   res,
                   result: true,
-                  data: { _id, openid },
+                  data: { _id, openid, priTmplId },
                   message: '登录成功'
                 })
               }
@@ -418,6 +399,14 @@ module.exports = {
         },
         { new: true }
       )
+      const punchDaysLen =
+        (new Date(result.end_date).getTime() +
+          1000 -
+          new Date(result.start_date).getTime()) /
+        (24 * 3600 * 1000)
+      if (Object.keys(result.punchHistory).length === punchDaysLen) {
+        await punchModel.updateOne({ _id: punch_id }, { state: 1 })
+      }
       responseData({ res, result, data: result, message: '编辑成功' })
     }
   },

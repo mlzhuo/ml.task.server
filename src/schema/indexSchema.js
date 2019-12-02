@@ -5,7 +5,7 @@ const userSchema = new Schema({
   date: { type: Date },
   last_date: { type: Date },
   openid: { type: String },
-  formId: { type: String },
+  // formId: { type: String },
   nickName: { type: String },
   gender: { type: Number },
   language: { type: String },
