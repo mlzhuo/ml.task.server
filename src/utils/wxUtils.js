@@ -4,6 +4,7 @@ const { AppID, AppSecret, Token } = global.config
 const { responseData } = require('../utils/apiUtils')
 const { userModel, eventModel, taskModel } = require('../schema/indexSchema')
 const { insertLog } = require('../model/indexModel')
+const WXBizDataCrypt = require('./WXBizDataCrypt')
 
 const checkSignature = (req, res) => {
   const { signature, timestamp, nonce, echostr } = req.query
@@ -227,8 +228,32 @@ const sendMessageEachDay = async () => {
   })
 }
 
+const getCurrentWeRunData = ({
+  signature,
+  rawData,
+  encryptedData,
+  iv,
+  openid,
+  sessionKey
+}) => {
+  return new Promise((resolve, reject) => {
+    const signature2 = new jsSHA(rawData + sessionKey, 'TEXT').getHash(
+      'SHA-1',
+      'HEX'
+    )
+    if (signature === signature2) {
+      const pc = new WXBizDataCrypt(AppID, sessionKey)
+      const data = pc.decryptData(encryptedData, iv)
+      resolve(data)
+    } else {
+      reject(null)
+    }
+  })
+}
+
 module.exports = {
   checkSignature,
   getAccessToken,
-  sendMessageEachDay
+  sendMessageEachDay,
+  getCurrentWeRunData
 }

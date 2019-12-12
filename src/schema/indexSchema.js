@@ -82,6 +82,12 @@ const configSchema = new Schema({
   config: { type: Object }
 })
 
+const werunSchema = new Schema({
+  date: { type: Date },
+  step: { type: Number },
+  user_id: { type: String }
+})
+
 module.exports = {
   userModel: mongoose.model('User', userSchema),
   eventModel: mongoose.model('Event', eventSchema),
@@ -90,5 +96,6 @@ module.exports = {
   versionModel: mongoose.model('Version', versionSchema),
   punchModel: mongoose.model('Punch', punchSchema),
   countdownModel: mongoose.model('Countdown', countdownSchema),
-  configModel: mongoose.model('Config', configSchema)
+  configModel: mongoose.model('Config', configSchema),
+  werunModel: mongoose.model('Werun', werunSchema)
 }

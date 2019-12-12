@@ -19,7 +19,7 @@ const responseData = ({ res, result, data, message }) => {
     res.json(
       ApiResponse({
         state: false,
-        message: 'failed'
+        message: message || 'failed'
       })
     )
   }

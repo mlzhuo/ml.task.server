@@ -7,7 +7,8 @@ const {
   versionModel,
   punchModel,
   countdownModel,
-  configModel
+  configModel,
+  werunModel
 } = require('../schema/indexSchema')
 const { responseData } = require('../utils/apiUtils')
 const { formatYMD } = require('../utils/index')
@@ -36,7 +37,11 @@ module.exports = {
       `https://api.weixin.qq.com/sns/jscode2session?appid=${AppID}&secret=${AppSecret}&js_code=${code}&grant_type=authorization_code`,
       async (error, response, body) => {
         if (!error && response.statusCode == 200) {
-          const openid = JSON.parse(body).openid
+          const { session_key, openid } = JSON.parse(body)
+          if (!global.session_key) {
+            global.session_key = {}
+          }
+          global.session_key[openid] = session_key
           delete req.body.code
           const last_date = new Date().toISOString()
           const user = await userModel.findOne({ openid })
@@ -473,6 +478,73 @@ module.exports = {
     responseData({ res, result, data: result })
   },
 
+  // werun
+  weRun: async (req, res) => {
+    const { signature, rawData, encryptedData, iv, openid, userId } = req.body
+    const sessionKey = global.session_key[openid]
+    const { getCurrentWeRunData } = require('../utils/wxUtils')
+    const currentWeRunData = await getCurrentWeRunData({
+      signature,
+      rawData,
+      encryptedData,
+      iv,
+      openid,
+      sessionKey
+    })
+    if (currentWeRunData) {
+      currentWeRunData.stepInfoList.forEach(v => {
+        werunModel.updateOne(
+          { date: new Date(v.timestamp * 1000).toISOString() },
+          {
+            date: new Date(v.timestamp * 1000).toISOString(),
+            step: v.step,
+            user_id: userId
+          },
+          { new: true, upsert: true },
+          (err, doc) => {}
+        )
+      })
+      const year = new Date().getFullYear()
+      const day = new Date().getDate()
+      const week = new Date().getDay()
+      let years = []
+      const result = await werunModel
+        .find({})
+        .sort({ date: 1 })
+        .limit(1)
+      const firstYear = new Date(result[0].date).getFullYear()
+      for (let i = firstYear; i <= year; i++) {
+        years.push(i)
+      }
+      const yearResult = await werunModel.find(
+        {
+          date: {
+            $gte: new Date(year + '-01-01 00:00:00'),
+            $lte: new Date(year + '-12-31 23:59:59')
+          }
+        },
+        'step'
+      )
+      const yearStep = yearResult.reduce((p, e) => p + e.step, 0)
+      const monthResult = yearResult.slice(-day)
+      const monthStep = monthResult.reduce((p, e) => p + e.step, 0)
+      const weekResult = monthResult.slice(-(week === 0 ? 7 : week))
+      const weekStep = weekResult.reduce((p, e) => p + e.step, 0)
+      const dayStep = yearResult.slice(-1).reduce((p, e) => p + e.step, 0)
+      responseData({
+        res,
+        result: 1,
+        data: {
+          yearStep,
+          monthStep,
+          weekStep,
+          dayStep,
+          years
+        }
+      })
+    }
+  },
+
   // tools data overview
   toolsDataOverview: async (req, res) => {
     const { user_id } = req.params
@@ -495,7 +567,7 @@ module.exports = {
     })
     const punchObj = {
       isActive: punchIsActive.length,
-      toadyIsDone: isPunch
+      todayIsDone: isPunch
     }
     responseData({
       res,
