@@ -480,8 +480,9 @@ module.exports = {
 
   // werun
   weRun: async (req, res) => {
-    const { signature, rawData, encryptedData, iv, openid, userId } = req.body
-    const sessionKey = global.session_key[openid]
+    const { signature, rawData, encryptedData, iv, openid, user_id } = req.body
+    const sessionKey =
+      (global.session_key && global.session_key[openid]) || null
     const { getCurrentWeRunData } = require('../utils/wxUtils')
     const currentWeRunData = await getCurrentWeRunData({
       signature,
@@ -498,51 +499,116 @@ module.exports = {
           {
             date: new Date(v.timestamp * 1000).toISOString(),
             step: v.step,
-            user_id: userId
+            user_id
           },
           { new: true, upsert: true },
           (err, doc) => {}
         )
       })
-      const year = new Date().getFullYear()
-      const day = new Date().getDate()
-      const week = new Date().getDay()
-      let years = []
-      const result = await werunModel
-        .find({})
-        .sort({ date: 1 })
-        .limit(1)
-      const firstYear = new Date(result[0].date).getFullYear()
-      for (let i = firstYear; i <= year; i++) {
-        years.push(i)
-      }
-      const yearResult = await werunModel.find(
-        {
-          date: {
-            $gte: new Date(year + '-01-01 00:00:00'),
-            $lte: new Date(year + '-12-31 23:59:59')
-          }
-        },
-        'step'
-      )
-      const yearStep = yearResult.reduce((p, e) => p + e.step, 0)
-      const monthResult = yearResult.slice(-day)
-      const monthStep = monthResult.reduce((p, e) => p + e.step, 0)
-      const weekResult = monthResult.slice(-(week === 0 ? 7 : week))
-      const weekStep = weekResult.reduce((p, e) => p + e.step, 0)
-      const dayStep = yearResult.slice(-1).reduce((p, e) => p + e.step, 0)
-      responseData({
-        res,
-        result: 1,
-        data: {
-          yearStep,
-          monthStep,
-          weekStep,
-          dayStep,
-          years
-        }
-      })
     }
+
+    const day = new Date().getDate()
+    const week = new Date().getDay()
+    const years = await werunModel.aggregate([
+      // { $project: { date: { $substr: ['$date', 0, 4] }, step: 1 } },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y',
+              date: { $add: ['$date', 8 * 3600000] }
+            }
+          },
+          step: { $sum: '$step' }
+        }
+      },
+      { $sort: { _id: -1 } }
+    ])
+    const monthResult = await werunModel
+      .find({}, 'date step')
+      .sort({ date: -1 })
+      .limit(day - 1)
+    const yearStep = years[0].step
+    const monthStep = monthResult.reduce((p, e) => p + e.step, 0)
+    const weekResult = monthResult.slice(0, week === 0 ? 7 : week)
+    const weekStep = weekResult.reduce((p, e) => p + e.step, 0)
+    const dayStep = monthResult[0].step
+
+    responseData({
+      res,
+      result: 1,
+      data: {
+        yearStep,
+        monthStep,
+        weekStep,
+        dayStep,
+        years
+      }
+    })
+  },
+  weRunEachYear: async (req, res) => {
+    const { year } = req.params
+    const yearResult = await werunModel.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: new Date(`${year}-01-01 00:00:00`),
+            $lte: new Date(`${year}-12-31 23:59:59`)
+          }
+        }
+      },
+      // { $project: { date: { $substr: ['$date', 5, 2] }, step: 1 } },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%m',
+              date: { $add: ['$date', 8 * 3600000] }
+            }
+          },
+          step: { $sum: '$step' }
+        }
+      },
+      { $sort: { _id: -1 } }
+    ])
+
+    responseData({
+      res,
+      result: 1,
+      data: yearResult
+    })
+  },
+  weRunEachMonth: async (req, res) => {
+    const { year, month } = req.params
+    const endDay = formatYMD(new Date(year, month, 0))
+    const yearResult = await werunModel.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: new Date(`${year}-${month}-01 00:00:00`),
+            $lte: new Date(`${endDay} 23:59:59`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%d',
+              date: { $add: ['$date', 8 * 3600000] }
+            }
+          },
+          step: { $sum: '$step' }
+        }
+      },
+      { $sort: { _id: -1 } }
+    ])
+
+    responseData({
+      res,
+      result: 1,
+      data: yearResult
+    })
   },
 
   // tools data overview

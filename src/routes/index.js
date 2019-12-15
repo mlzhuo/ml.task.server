@@ -113,6 +113,12 @@ router.get('/:user_id/countdown/:countdown_id', (req, res) => {
 router.post('/:user_id/werun', (req, res) => {
   indexModel.weRun(req, res)
 })
+router.get('/:user_id/werun/:year', (req, res) => {
+  indexModel.weRunEachYear(req, res)
+})
+router.get('/:user_id/werun/:year/:month', (req, res) => {
+  indexModel.weRunEachMonth(req, res)
+})
 
 // tools data overview
 router.get('/:user_id/tools_data_overview', (req, res) => {

@@ -246,9 +246,9 @@ const getCurrentWeRunData = ({
       const data = pc.decryptData(encryptedData, iv)
       resolve(data)
     } else {
-      reject(null)
+      reject()
     }
-  })
+  }).catch(err => {})
 }
 
 module.exports = {
