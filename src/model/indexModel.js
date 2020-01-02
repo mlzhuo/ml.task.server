@@ -441,8 +441,13 @@ module.exports = {
   },
   addCountdown: async (req, res) => {
     const date = new Date().toISOString()
+    const { target_date, description, name, user_id } = req.body
+    delete req.body.target_date
     const result = await countdownModel.create({
-      ...req.body,
+      description,
+      name,
+      user_id,
+      target_date: new Date(target_date).toISOString(),
       date,
       edit_time: date
     })
@@ -509,6 +514,8 @@ module.exports = {
 
     const day = new Date().getDate()
     const week = new Date().getDay()
+    const year = new Date().getFullYear()
+    const month = new Date().getMonth() + 1
     const years = await werunModel.aggregate([
       // { $project: { date: { $substr: ['$date', 0, 4] }, step: 1 } },
       {
@@ -527,10 +534,13 @@ module.exports = {
     const monthResult = await werunModel
       .find({}, 'date step')
       .sort({ date: -1 })
-      .limit(day - 1)
+      .limit(day)
+    let weekResult = await werunModel
+      .find({}, 'date step')
+      .sort({ date: -1 })
+      .limit(week === 0 ? 7 : week)
     const yearStep = years[0].step
     const monthStep = monthResult.reduce((p, e) => p + e.step, 0)
-    const weekResult = monthResult.slice(0, week === 0 ? 7 : week)
     const weekStep = weekResult.reduce((p, e) => p + e.step, 0)
     const dayStep = monthResult[0].step
 
