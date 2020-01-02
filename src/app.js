@@ -6,6 +6,7 @@ var logger = require('morgan')
 const bodyParser = require('body-parser')
 const schedule = require('node-schedule')
 const { getAccessToken, sendMessageEachDay } = require('./utils/wxUtils')
+const { clearInvalidPunchState, clearInvalidCountdownState } = require('./utils/wxUtils')
 var indexRouter = require('./routes/index')
 var app = express()
 app.all('*', (req, res, next) => {
@@ -56,11 +57,22 @@ getAccessToken()
 setInterval(getAccessToken, 7150 * 1000)
 
 // 每天18:30 推送消息
-scheduleSendMessage()
-function scheduleSendMessage() {
-  schedule.scheduleJob('0 30 18 * * *', function() {
+const scheduleSendMessage = () => {
+  schedule.scheduleJob('0 30 18 * * *', () => {
     sendMessageEachDay()
   })
 }
+scheduleSendMessage()
+
+// 每天定时清理非法打卡状态, 非法倒计时状态
+const scheduleClearState = () => {
+  schedule.scheduleJob('0 0 01 * * *', () => {
+    clearInvalidPunchState()
+    clearInvalidCountdownState()
+  })
+}
+scheduleClearState()
+
+
 
 module.exports = app

@@ -430,6 +430,10 @@ module.exports = {
     })
     responseData({ res, result, data: result })
   },
+  clearInvalidPunchState: async (req, res) => {
+    const date = new Date()
+    punchModel.updateMany({ end_date: { $lte: date } }, { state: 1 })
+  },
 
   // countdown
   findAllCountdown: async (req, res) => {
@@ -481,6 +485,10 @@ module.exports = {
       $or: [{ delete: { $exists: false } }, { delete: 0 }]
     })
     responseData({ res, result, data: result })
+  },
+  clearInvalidCountdownState: async (req, res) => {
+    const date = new Date()
+    countdownModel.updateMany({ target_date: { $lte: date } }, { state: 1 })
   },
 
   // werun
