@@ -14,13 +14,10 @@ const { responseData } = require('../utils/apiUtils')
 const { formatYMD } = require('../utils/index')
 const { AppID, AppSecret } = global.config
 
-const insertLog = ({ user_id, user_name, openid, type, description }) => {
+const insertLog = ({ user_id, type }) => {
   let doc = {
     user_id,
-    user_name,
-    openid,
     type,
-    description: description || 'ok',
     date: new Date().toISOString()
   }
   logModel.create(doc)
@@ -53,10 +50,7 @@ module.exports = {
               (err, doc) => {
                 insertLog({
                   user_id: doc._id,
-                  user_name: doc.nickName,
-                  openid: doc.openid,
-                  type: 'login',
-                  description: err
+                  type: 'login'
                 })
                 const { _id, openid } = doc
                 responseData({
@@ -79,10 +73,7 @@ module.exports = {
               (err, doc) => {
                 insertLog({
                   user_id: doc._id,
-                  user_name: doc.nickName,
-                  openid: doc.openid,
-                  type: 'login',
-                  description: err
+                  type: 'login'
                 })
                 const { _id, openid } = doc
                 responseData({
@@ -94,11 +85,6 @@ module.exports = {
               }
             )
           }
-        } else {
-          insertLog({
-            type: 'login',
-            description: error
-          })
         }
       }
     )
@@ -108,7 +94,7 @@ module.exports = {
   findAllVersion: async (req, res) => {
     const { limit } = req.query
     const result = await versionModel
-      .find({ $or: [{ delete: { $exists: false } }, { delete: 0 }] })
+      .find({ public: 1, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
       .sort({ date: -1 })
     const data = limit ? result.slice(0, limit) : result
     responseData({ res, result, data })
@@ -191,7 +177,17 @@ module.exports = {
   addEvents: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
-    const result = await eventModel.create({ ...req.body, date, edit_time })
+    const { user_id } = req.params
+    const result = await eventModel.create({
+      ...req.body,
+      date,
+      edit_time,
+      user_id
+    })
+    insertLog({
+      user_id,
+      type: 'add_event'
+    })
     responseData({ res, result, data: result, message: '添加成功' })
   },
   editEvents: async (req, res) => {
@@ -259,6 +255,7 @@ module.exports = {
   addTask: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
+    const { user_id } = req.params
     const { content, level, event_id } = req.body
     const result = await taskModel.create({
       event_id,
@@ -268,6 +265,10 @@ module.exports = {
       edit_time
     })
     await eventModel.updateOne({ _id: event_id }, { edit_time })
+    insertLog({
+      user_id,
+      type: 'add_task'
+    })
     responseData({ res, result, data: result, message: '添加成功' })
   },
   editTask: async (req, res) => {
@@ -335,6 +336,7 @@ module.exports = {
   addPunch: async (req, res) => {
     const date = new Date().toISOString()
     const edit_time = date
+    const { user_id } = req.params
     const { start_date, end_date } = req.body
     delete req.body.start_date
     delete req.body.end_date
@@ -346,6 +348,10 @@ module.exports = {
       ...req.body
     }
     const result = await punchModel.create(obj)
+    insertLog({
+      user_id,
+      type: 'add_punch'
+    })
     responseData({ res, result, data: result, message: '添加成功' })
   },
   editPunch: async (req, res) => {
@@ -432,7 +438,13 @@ module.exports = {
   },
   clearInvalidPunchState: async (req, res) => {
     const date = new Date()
-    punchModel.updateMany({ end_date: { $lte: date } }, { state: 1 })
+    punchModel.updateMany(
+      { end_date: { $lte: date } },
+      { state: 1 },
+      (err, doc) => {
+        insertLog({ type: 'clear_punch_state' })
+      }
+    )
   },
 
   // countdown
@@ -445,7 +457,8 @@ module.exports = {
   },
   addCountdown: async (req, res) => {
     const date = new Date().toISOString()
-    const { target_date, description, name, user_id } = req.body
+    const { user_id } = req.params
+    const { target_date, description, name } = req.body
     delete req.body.target_date
     const result = await countdownModel.create({
       description,
@@ -454,6 +467,10 @@ module.exports = {
       target_date: new Date(target_date).toISOString(),
       date,
       edit_time: date
+    })
+    insertLog({
+      user_id,
+      type: 'add_countdown'
     })
     responseData({ res, result, data: result, message: '添加成功' })
   },
@@ -488,7 +505,13 @@ module.exports = {
   },
   clearInvalidCountdownState: async (req, res) => {
     const date = new Date()
-    countdownModel.updateMany({ target_date: { $lte: date } }, { state: 1 })
+    countdownModel.updateMany(
+      { target_date: { $lte: date } },
+      { state: 1 },
+      (err, doc) => {
+        insertLog({ type: 'clear_countdown_state' })
+      }
+    )
   },
 
   // werun
@@ -522,10 +545,7 @@ module.exports = {
 
     const day = new Date().getDate()
     const week = new Date().getDay()
-    const year = new Date().getFullYear()
-    const month = new Date().getMonth() + 1
     const years = await werunModel.aggregate([
-      // { $project: { date: { $substr: ['$date', 0, 4] }, step: 1 } },
       {
         $group: {
           _id: {
@@ -551,7 +571,10 @@ module.exports = {
     const monthStep = monthResult.reduce((p, e) => p + e.step, 0)
     const weekStep = weekResult.reduce((p, e) => p + e.step, 0)
     const dayStep = monthResult[0].step
-
+    insertLog({
+      user_id,
+      type: 'werun'
+    })
     responseData({
       res,
       result: 1,
@@ -587,7 +610,7 @@ module.exports = {
           step: { $sum: '$step' }
         }
       },
-      { $sort: { _id: -1 } }
+      { $sort: { _id: 1 } }
     ])
 
     responseData({
@@ -619,7 +642,7 @@ module.exports = {
           step: { $sum: '$step' }
         }
       },
-      { $sort: { _id: -1 } }
+      { $sort: { _id: 1 } }
     ])
 
     responseData({

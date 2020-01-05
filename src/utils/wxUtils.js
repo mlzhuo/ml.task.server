@@ -30,7 +30,7 @@ const getAccessToken = () => {
         const priTmplId = template.map(v => v.priTmplId)
         global.config.priTmplId = priTmplId
       } else {
-        insertLog({ type: 'access_token', description: error })
+        insertLog({ type: 'access_token' })
       }
     }
   )
@@ -149,12 +149,11 @@ const sendMessage = (touser, template_id, kValue1, kValue2) => {
     },
     (error, response, body) => {
       if (!error && response.statusCode == 200) {
-        console.log(body.errmsg)
-        // insertLog({
-        //   openid: touser,
-        //   type: 'send_message',
-        //   description: body.errmsg
-        // })
+        insertLog({
+          openid: touser,
+          type: 'send_message',
+          description: body.errmsg
+        })
       }
     }
   )

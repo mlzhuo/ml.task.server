@@ -5,7 +5,6 @@ const userSchema = new Schema({
   date: { type: Date },
   last_date: { type: Date },
   openid: { type: String },
-  // formId: { type: String },
   nickName: { type: String },
   gender: { type: Number },
   language: { type: String },
@@ -17,7 +16,7 @@ const userSchema = new Schema({
 
 const eventSchema = new Schema({
   title: { type: String },
-  description: { type: String, default: '暂无描述' },
+  description: { type: String },
   date: { type: Date },
   edit_time: { type: Date },
   level: { type: Number, default: 0 },
@@ -38,7 +37,6 @@ const taskSchema = new Schema({
 const logSchema = new Schema({
   description: { type: String },
   user_id: { type: String },
-  user_name: { type: String },
   openid: { type: String },
   type: { type: String },
   date: { type: Date }
@@ -49,7 +47,8 @@ const versionSchema = new Schema({
   description: { type: String },
   date: { type: Date },
   edit_time: { type: Date },
-  delete: { type: Number }
+  delete: { type: Number },
+  public: { type: Number, default: 1 }
 })
 
 const punchSchema = new Schema({
