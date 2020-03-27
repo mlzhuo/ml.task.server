@@ -452,7 +452,7 @@ module.exports = {
     const { user_id } = req.params
     const result = await countdownModel
       .find({ user_id, $or: [{ delete: { $exists: false } }, { delete: 0 }] })
-      .sort({ date: -1 })
+      .sort({ state: 1, target_date: 1 })
     responseData({ res, result, data: result })
   },
   addCountdown: async (req, res) => {
@@ -476,16 +476,13 @@ module.exports = {
   },
   editCountdown: async (req, res) => {
     const edit_time = new Date().toISOString()
-    const { countdown_id, target_date, name, description } = req.body
-    let state = 0
-    if (new Date(target_date).getTime() <= new Date().getTime()) {
-      state = 1
-    }
+    const { countdown_id } = req.body
+    delete req.body.countdown_id
     const result = await countdownModel.findOneAndUpdate(
       { _id: countdown_id },
-      { target_date, name, description, edit_time, state }
+      { ...req.body, edit_time }
     )
-    responseData({ res, result, data: result, message: '编辑成功' })
+    responseData({ res, result: 1, data: result, message: '编辑成功' })
   },
   delCountdown: async (req, res) => {
     const { countdown_id } = req.params
@@ -676,11 +673,23 @@ module.exports = {
       isActive: punchIsActive.length,
       todayIsDone: isPunch
     }
+    const countdownIsActive = await countdownModel
+      .find({
+        user_id,
+        state: 0,
+        $or: [{ delete: { $exists: false } }, { delete: 0 }]
+      })
+      .sort({ edit_time: -1 })
+    const countdownObj = {
+      isActive: countdownIsActive.length,
+      mostResent: countdownIsActive[0]
+    }
     responseData({
       res,
       result: 1,
       data: {
-        punch: punchObj
+        punch: punchObj,
+        countdown: countdownObj
       }
     })
   }
